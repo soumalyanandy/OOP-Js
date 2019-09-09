@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<!-- no cache -->
+	<!-- <meta http-equiv='cache-control' content='no-cache'>
+	<meta http-equiv='expires' content='0'>
+	<meta http-equiv='pragma' content='no-cache'> -->
+	<title>Blog app using javascript</title>
+	<link rel="shortcut icon" href="public/asset/img/favicon.ico" type="image/x-icon">
+	<link rel="icon" href="public/asset/img/favicon.ico" type="image/x-icon">
+	<script type="text/javascript" src="public/bootstrap/dist/js/bootstrap.js"></script>
+	<!-- <script
+  src="https://code.jquery.com/jquery-3.4.1.js"
+  integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+  crossorigin="anonymous"></script> -->
+	<link rel="stylesheet" type="text/css" href="public/bootstrap/dist/css/bootstrap.css">
+	<script type="text/javascript" src="public/asset/js/html-element.js"></script>
+	<script type="text/javascript" src="public/asset/js/template-parse.js"></script>
+	<script type="text/javascript" src="public/asset/js/form-validation.js"></script>
+	<script type="text/javascript" src="public/asset/js/blog.js"></script>
+</head>
+<body>
+	<div class="container-fluid">
+	  <div class="row">
+	  	<div class="col-xs-12 col-md-6">
+	  		<h2> Blog Form</h2>
+	  		<!-- <form name="blog_form1" id="blogFormView1"></form> -->
+	  		<form name="blog_form2" id="blogFormView2">
+	  			<div id="alert" class="alert (form-alert-msg-class) alert-dismissible fade (form-alert-msg-display)" role="alert">
+				 (form-alert-msg)
+				  <!-- <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+				    <span aria-hidden="true">&times;</span>
+				  </button> -->
+				</div>
+			  <div class="form-group row">
+			    <label for="title" class="col-sm-2 col-form-label">Title</label>
+			    <div class="col-sm-10">
+			      <input type="text" placeholder="Title" class="form-control" id="title" name="title" />
+			    </div>
+			  </div>
+			  <div class="form-group row">
+			    <label for="desc" class="col-sm-2 col-form-label">Category</label>
+			    <div class="col-sm-10">
+			      	<select class="custom-select" name="category">
+			      	  <option value="">Select any</option>
+					  <option value="travel">Travel</option>
+					  <option value="food">Food</option>
+					  <option value="shopping">Shopping</option>
+					  <option value="book">Book</option>
+					</select>
+			    </div>
+			  </div>
+			  <div class="form-group row d-none">
+			  	<label for="title" class="col-sm-2 col-form-label">Preview</label>
+			  	<div class="col-sm-10">
+			      	<div class="img-thumbnail" id="preview"></div>
+			    </div>
+			  </div>
+			  <div class="form-group row">
+			    <label for="title" class="col-sm-2 col-form-label">Photo</label>
+			    <div class="col-sm-10">
+			      	<div class="custom-file">
+					  <input type="file" class="custom-file-input" id="photo" name="photo">
+					  <label class="custom-file-label" for="photo">Choose file</label>
+					  <input type="hidden" name="file">
+					</div>
+			    </div>
+			  </div>
+			  <div class="form-group row">
+			    <label for="desc" class="col-sm-2 col-form-label">Description</label>
+			    <div class="col-sm-10">
+			      <textarea class="form-control" id="desc" name="desc" placeholder="About blog"></textarea>
+			    </div>
+			  </div>
+			  <button type="submit" class="btn btn-primary">Save</button>
+			</form>
+	  	</div>
+	  </div>
+	</div>
+	<script type="text/javascript">
+		/*(function(){ 
+			[
+			    'public/asset/js/blog.js'
+			].forEach(function(src) {
+			    var script = document.createElement('script');
+			    script.src = src;
+			    script.async = false;
+			    //console.log(script.loaded);
+			    document.head.appendChild(script);
+			});
+			
+		})();*/
+		console.log('The document is still loading.');
+		document.addEventListener('readystatechange', event => {
+			//console.log(event.target.readyState);
+			/* Different states of readiness */
+			switch (event.target.readyState) {
+			  case "loading":
+			    console.log('The document is still loading.');
+			    break;
+			  case "interactive":
+			    console.log('The document has finished loading. We can now access the DOM elements.');
+			    // But sub-resources such as images, stylesheets and frames are still loading.
+			    //var span = document.createElement("span");
+			    //span.textContent = "A <span> element.";
+			    //document.body.appendChild(span);
+			    break;
+			  case "complete":
+			    console.log('The page is fully loaded.');
+			    //console.log("The first CSS rule is: " + document.styleSheets[0].cssRules[0].cssText);
+			    break;
+			}
+		});
+
+		/*$(document).ready(function(){
+			console.log("document ready !");
+		});*/
+	</script>
+</body>
+</html>
