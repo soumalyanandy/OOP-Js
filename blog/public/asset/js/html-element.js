@@ -76,8 +76,30 @@ var SELECTORS = {};
 			}
 			//});
 			console.log("now");
+
+
+
+
+
+
+
+			/*
+				can not able to save element objects with respect to parent in nested format.
+			*/
 			console.log(_ELEMENTS['doc']);
 			console.log(_ELEMENTS);
+			/*
+				the above two line shows different values for same key 
+				... CAN NOT ABLE TO UNDERSTAND WHY
+			*/
+
+
+
+
+
+
+
+
 		} else if(selector != null){
 			console.log("query elseif");
 			console.log((el).querySelectorAll(selector));

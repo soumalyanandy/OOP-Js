@@ -1,8 +1,37 @@
 /* Blog Javascript File */
+function allBlogs() {
+	var archive = {}, // Notice change here
+		keys = Object.keys(localStorage),
+		i = keys.length;
+
+	while ( i-- ) {
+		archive[ keys[i] ] = localStorage.getItem( keys[i] );
+	}
+	return archive;
+}
 window.addEventListener("load", function(){
 	console.log("window load");
-	/* blog from view object */
-	var blogFormView = new Template('#blogFormView2');
+	/* blog from block object */
+	var blogFormBlock = new Block('#blogFormBlock');
+	var blogListBlock = new Block('#blog_list');
+
+	/* list all posted blog from local storage */
+	var archives = allBlogs();
+	blogListBlock.template('#_blank_blog_row_template');
+	/*for (var key in archives) {
+		if (archives.hasOwnProperty(key)) {
+			archive = JSON.parse(archives[key]);
+			blogListBlock.assign('img','<img alt="image" class="img-thumbnail" src="'+archive['file']+'" />');
+			blogListBlock.append(archive, false, false);
+		}
+	}*/
+	blogListBlock.hook_reg({
+		'before-append-in-cycle' : function(val){ 
+			blogListBlock.assign('img','<img alt="image" class="img-thumbnail" src="'+val['file']+'" />');
+		}
+	});
+	blogListBlock.cycle(archives);
+
 	/* listen to form submit event */
 	document.forms["blog_form2"].addEventListener("submit", function(e){
 		/* prevant default action */
@@ -23,7 +52,7 @@ window.addEventListener("load", function(){
 		formSubmitData['file'] = FORM.elements["file"].value.trim();
 		formSubmitData['desc'] = FORM.elements["desc"].value.trim();*/
 		//formValidation.formData(formSubmitData);
-		formValidation.view(blogFormView);
+		formValidation.block(blogFormBlock);
 		formValidation.setRules(['required']);
 		formValidation.setErrorMessages({
 			'title' : {
@@ -40,20 +69,36 @@ window.addEventListener("load", function(){
 			},
 		});
 		
-		formValidation.run(function(isInvalid, formView, formSubmitData, formEle){ 
+		formValidation.run(function(isInvalid, formBlock, formSubmitData, formEle){ 
 			/* check for validation */	
 			if(isInvalid){
-				formView.assign('form-alert-msg-class', 'alert-danger');
-				formView.assign('form-alert-msg-display','show');
-				formView.render();
+				formBlock.assign('form-alert-msg-class', 'alert-danger');
+				formBlock.assign('form-alert-msg-display','show');
 				/* set data */
 				formEle.elements["title"].value = formSubmitData['title'];
 				formEle.elements["category"].value = formSubmitData['category'];
 				formEle.elements["file"].value = formSubmitData['file'];
 				formEle.elements["desc"].value = formSubmitData['desc'];
+				if(/data:image\/([a-zA-Z]*);base64,([^\"]*)/g.test(formEle.elements["file"])){
+					console.log("image");
+					//var fileReader = new FileReader();
+			      	//fileReader.onloadend = function() {
+			         	//console.log(fileReader.result);
+			         	formEle.closest(".custom-file").querySelector("input[type=hidden]").value = formSubmitData['file'];
+			         	var img = document.createElement("IMG");
+			         	img.src = formSubmitData['file'];
+			         	//console.log(formEle.closest(".row").previousSibling.previousSibling.querySelector("#preview"));
+			      		img.style.width = '100%';
+			      		formEle.closest(".row").previousElementSibling.classList.remove('d-none');
+			      		formEle.closest(".row").previousElementSibling.querySelector("#preview").innerHTML = "";
+			      		formEle.closest(".row").previousElementSibling.querySelector("#preview").appendChild(img);
+			      	//}
+			      	//fileReader.readAsDataURL(formSubmitData['file']);
+				}
+				formBlock.render();
 			} else {
-				formView.assign('form-alert-msg-class','');
-				formView.assign('form-alert-msg-display','');
+				formBlock.assign('form-alert-msg-class','');
+				formBlock.assign('form-alert-msg-display','');
 			
 				/* save in local storage */
 				var time = new Date().getTime();
@@ -64,11 +109,16 @@ window.addEventListener("load", function(){
 				  output += property + ': ' + object[property]+'; ';
 				}
 				console.log(output);
-				formView.assign('form-alert-msg','Blog post successfull.');
-				formView.assign('form-alert-msg-class','alert-success');
-				formView.assign('form-alert-msg-display','show');
-				formView.render();
+				formBlock.assign('form-alert-msg','Blog post successfull.');
+				formBlock.assign('form-alert-msg-class','alert-success');
+				formBlock.assign('form-alert-msg-display','show');
+				formBlock.render(false, function(){ 
+					blogListBlock.template('#_blank_blog_row_template');
+					blogListBlock.assign('img','<img alt="image" class="img-thumbnail" src="'+formSubmitData['file']+'" />');
+					blogListBlock.append(formSubmitData);
+				});
 			}
+			//blogListBlock.dump();
 		});
 	});
 	
@@ -102,21 +152,37 @@ window.addEventListener("load", function(){
 	})*/
 	//console.log(Array.prototype.slice.call(x.querySelectorAll("#photo")));
 
-	JS("[name^=blog_form]").dynamic(function(ev, el){
+	/*JS("[name^=blog_form]").dynamic(function(ev, el){
 		console.log(el+" modified !");
 		JS("#photo",el).dynamic('change', function(ev, el){
 			console.log(el+" changed !");
 		});
-	});
+	});*/
 
-	//document.forms["blog_form"].addEventListener('DOMSubtreeModified', event => {
-		//console.log("Form loaded....");
+	document.forms["blog_form2"].addEventListener('DOMSubtreeModified', function(event) {
+		console.log("Form loaded....");
 		//console.log(document.forms["blog_form"].querySelector("#photo"));
-		/*if(document.forms["blog_form"].querySelector("#photo")){
-			document.forms["blog_form"].querySelector("#photo").addEventListener("change", function(e){
-				console.log("changed !");
+		if(document.forms["blog_form2"].querySelector("#photo")){
+			document.forms["blog_form2"].querySelector("#photo").addEventListener("change", function(e){
+				console.log(this.value);
+				this.nextSibling.nextSibling.innerText = this.value;
+				console.log(this.files.item(0));
+				var THIS = this;
+				var fileReader = new FileReader();
+		      	fileReader.onloadend = function() {
+		         	//console.log(fileReader.result);
+		         	THIS.closest(".custom-file").querySelector("input[type=hidden]").value = fileReader.result;
+		         	var img = document.createElement("IMG");
+		         	img.src = fileReader.result;
+		         	//console.log(THIS.closest(".row").previousSibling.previousSibling.querySelector("#preview"));
+		      		img.style.width = '100%';
+		      		THIS.closest(".row").previousElementSibling.classList.remove('d-none')
+		      		THIS.closest(".row").previousElementSibling.querySelector("#preview").innerHTML = "";
+		      		THIS.closest(".row").previousElementSibling.querySelector("#preview").appendChild(img);
+		      	}
+		      	fileReader.readAsDataURL(this.files.item(0));
 			});
-		}*/
+		}
 		
 		// file upload 
 		/*document.forms["blog_form"].elements["photo"].addEventListener("change", function(e){
@@ -138,7 +204,7 @@ window.addEventListener("load", function(){
 	      	}
 	      	fileReader.readAsDataURL(this.files.item(0));
 		});*/
-	//});
+	});
 
 	/*document.forms["blog_form"].addEventListener('readystatechange', event => {
 		console.log(event.target.readyState);

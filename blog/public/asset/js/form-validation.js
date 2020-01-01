@@ -1,3 +1,4 @@
+/* Form Validation Class */ 
 function FromValidation(selector, debug = false){
 	this.selector = document.querySelector(selector);
 	this.formSubmitData = {};
@@ -16,8 +17,8 @@ FromValidation.prototype.getFormData = function(callbackFunc = false){
 	_getFormData(this, callbackFunc);
 }
 
-FromValidation.prototype.view = function(viewObj = {}){
-	_setFormView(this,viewObj);
+FromValidation.prototype.block = function(blockObj = {}){
+	_setFormBlock(this,blockObj);
 }
 
 FromValidation.prototype.run = function(callbackFunc = false){
@@ -32,7 +33,7 @@ FromValidation.prototype.setErrorMessages = function(errorMsgObj = {}){
 	_errorMessages(this, errorMsgObj);
 }
 
-FromValidation.prototype.debug = function(){
+FromValidation.prototype.dump = function(){
 	console.log('FromValidation debug object :------------------------------------->');
 	var output = '';
 	for (var property in this) {
@@ -53,8 +54,8 @@ function _getFormData(obj, callbackFunc = false){
 	if(typeof callbackFunc === 'function') callbackFunc.apply({}, [obj.formSubmitData, obj.selector]);
 }
 
-function _setFormView(obj, view){
-	obj.view = view;
+function _setFormBlock(obj, block){
+	obj.block = block;
 }
 
 function _setRules(obj, rules){
@@ -71,7 +72,7 @@ function _errorMessages(obj, errorMsgObj){
 
 function _clear(obj){
 	obj.errorMessages = {};
-	obj.view = '';
+	obj.block = '';
 	obj.rules = [];
 }
 
@@ -79,17 +80,17 @@ function _validate(obj, callbackFunc = false){
 	for(var key in obj.formSubmitData){
 		if(!obj.validation_error && obj.rules.indexOf('required') !== -1 && obj.formSubmitData[key] == ""){ 
 			obj.validation_error = true;
-			obj.view.assign('form-alert-msg',obj.errorMessages[key]['required']);
+			obj.block.assign('form-alert-msg',obj.errorMessages[key]['required']);
 		} /*else if(obj.formSubmitData['category'] == ""){
 			obj.validation_error = true;
-			obj.view.assign('form-alert-msg',obj.errorMessages['title']['required']);
+			obj.block.assign('form-alert-msg',obj.errorMessages['title']['required']);
 		} else if(obj.formSubmitData['file'] == ""){
 			obj.validation_error = true;
-			obj.view.assign('form-alert-msg',obj.errorMessages['title']['required']);
+			obj.block.assign('form-alert-msg',obj.errorMessages['title']['required']);
 		} else if(obj.formSubmitData['desc'] == ""){
 			obj.validation_error = true;
-			obj.view.assign('form-alert-msg',obj.errorMessages['title']['required']);
+			obj.block.assign('form-alert-msg',obj.errorMessages['title']['required']);
 		}*/ else {}
 	}
-	if(typeof callbackFunc === 'function') callbackFunc.apply({}, [obj.validation_error, obj.view, obj.formSubmitData, obj.selector]);
+	if(typeof callbackFunc === 'function') callbackFunc.apply({}, [obj.validation_error, obj.block, obj.formSubmitData, obj.selector]);
 }

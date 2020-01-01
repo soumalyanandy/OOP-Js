@@ -8,16 +8,11 @@
 	<title>Blog app using javascript</title>
 	<link rel="shortcut icon" href="public/asset/img/favicon.ico" type="image/x-icon">
 	<link rel="icon" href="public/asset/img/favicon.ico" type="image/x-icon">
-	<script type="text/javascript" src="public/bootstrap/dist/js/bootstrap.js"></script>
 	<!-- <script
   src="https://code.jquery.com/jquery-3.4.1.js"
   integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
   crossorigin="anonymous"></script> -->
 	<link rel="stylesheet" type="text/css" href="public/bootstrap/dist/css/bootstrap.css">
-	<script type="text/javascript" src="public/asset/js/html-element.js"></script>
-	<script type="text/javascript" src="public/asset/js/template-parse.js"></script>
-	<script type="text/javascript" src="public/asset/js/form-validation.js"></script>
-	<script type="text/javascript" src="public/asset/js/blog.js"></script>
 </head>
 <body>
 	<div class="container-fluid">
@@ -25,7 +20,7 @@
 	  	<div class="col-xs-12 col-md-6">
 	  		<h2> Blog Form</h2>
 	  		<!-- <form name="blog_form1" id="blogFormView1"></form> -->
-	  		<form name="blog_form2" id="blogFormView2">
+	  		<form name="blog_form2" id="blogFormBlock">
 	  			<div id="alert" class="alert (form-alert-msg-class) alert-dismissible fade (form-alert-msg-display)" role="alert">
 				 (form-alert-msg)
 				  <!-- <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -74,9 +69,30 @@
 			  </div>
 			  <button type="submit" class="btn btn-primary">Save</button>
 			</form>
-	  	</div>
+		  </div>
+		  <div class="col-xs-12 col-md-6" id="blog_list" style="overflow-y: scroll; border: 1px black dotted; height : 425px">
+			  
+		  </div>
+		  <div class="d-none" id="_blank_blog_row_template">
+				<div class="row">
+					<div class="col-sm-6">
+						(img)
+					</div>
+					<div class="col-sm-6">
+						<h3>(title)</h3>
+						<h5>(category)</h5>
+						<p>(desc)</p>
+					</div>
+				</div>
+				<hr>
+		  </div>
 	  </div>
 	</div>
+	<script type="text/javascript" src="public/bootstrap/dist/js/bootstrap.js"></script>
+	<script type="text/javascript" src="public/asset/js/html-element.js"></script>
+	<script type="text/javascript" src="public/asset/js/html-parse.js"></script>
+	<script type="text/javascript" src="public/asset/js/form-validation.js"></script>
+	<script type="text/javascript" src="public/asset/js/blog.js"></script>
 	<script type="text/javascript">
 		/*(function(){ 
 			[
