@@ -1,23 +1,21 @@
+import {Block} from './html-parse';
+import {FromValidation} from './form-validation';
+import {Data} from './data';
 /* Blog Javascript File */
-function allBlogs() {
-	var archive = {}, // Notice change here
-		keys = Object.keys(localStorage),
-		i = keys.length;
 
-	while ( i-- ) {
-		archive[ keys[i] ] = localStorage.getItem( keys[i] );
-	}
-	return archive;
-}
 window.addEventListener("load", function(){
 	console.log("window load");
+	/* Load database */
+	var Blog = new Data('form');
+	var archives = Blog.getAll();
+	
 	/* blog from block object */
 	var blogFormBlock = new Block('#blogFormBlock');
 	var blogListBlock = new Block('#blog_list');
-
+	
 	/* list all posted blog from local storage */
-	var archives = allBlogs();
 	blogListBlock.template('#_blank_blog_row_template');
+	
 	/*for (var key in archives) {
 		if (archives.hasOwnProperty(key)) {
 			archive = JSON.parse(archives[key]);
@@ -25,12 +23,16 @@ window.addEventListener("load", function(){
 			blogListBlock.append(archive, false, false);
 		}
 	}*/
+
+	/* Register a hook in cycle */
 	blogListBlock.hook_reg({
 		'before-append-in-cycle' : function(val){ 
 			blogListBlock.assign('img','<img alt="image" class="img-thumbnail" src="'+val['file']+'" />');
 		}
 	});
+	
 	blogListBlock.cycle(archives);
+	
 
 	/* listen to form submit event */
 	document.forms["blog_form2"].addEventListener("submit", function(e){
@@ -101,22 +103,30 @@ window.addEventListener("load", function(){
 				formBlock.assign('form-alert-msg-display','');
 			
 				/* save in local storage */
-				var time = new Date().getTime();
-				localStorage.setItem("form"+time, JSON.stringify(formSubmitData));
-				var object = JSON.parse(localStorage.getItem("form"+time));
-				var output = '';
-				for (var property in object) {
-				  output += property + ': ' + object[property]+'; ';
+				var Blog = new Data('form');
+				Blog.data(formSubmitData);
+				var LastSaveId = Blog.save();
+				if(LastSaveId){
+					var getLastBlog = Blog.get(LastSaveId);
+					var output = '';
+					for (var property in getLastBlog) {
+					output += property + ': ' + getLastBlog[property]+'; ';
+					}
+					console.log(output);
+					formBlock.assign('form-alert-msg','Blog post successfull.');
+					formBlock.assign('form-alert-msg-class','alert-success');
+					formBlock.assign('form-alert-msg-display','show');
+					formBlock.render(false, function(){ 
+						blogListBlock.template('#_blank_blog_row_template');
+						blogListBlock.assign('img','<img alt="image" class="img-thumbnail" src="'+formSubmitData['file']+'" />');
+						blogListBlock.append(formSubmitData);
+					});
+				} else {
+					formBlock.assign('form-alert-msg-class', 'alert-danger');
+					formBlock.assign('form-alert-msg-display','show');
+					formBlock.assign('form-alert-msg','Blog save unsuccessful !');
+					return false;
 				}
-				console.log(output);
-				formBlock.assign('form-alert-msg','Blog post successfull.');
-				formBlock.assign('form-alert-msg-class','alert-success');
-				formBlock.assign('form-alert-msg-display','show');
-				formBlock.render(false, function(){ 
-					blogListBlock.template('#_blank_blog_row_template');
-					blogListBlock.assign('img','<img alt="image" class="img-thumbnail" src="'+formSubmitData['file']+'" />');
-					blogListBlock.append(formSubmitData);
-				});
 			}
 			//blogListBlock.dump();
 		});

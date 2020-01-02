@@ -1,8 +1,9 @@
 /* Block Class */
-function Block(selector, debug = false){
+export function Block(selector, debug = false){
 	this.selector = document.querySelector(selector);
 	this.template_selector = '';
 	this.is_template = false;
+	this.is_append = true;
 	this.templateHTML = '';
 	this.layout = this.selector.innerHTML;
 	this.parseHTML = '';
@@ -12,10 +13,10 @@ function Block(selector, debug = false){
 	this.hooks = [];
 	this.debug = debug;
 	if(debug){
-		console.log('Block debug mode : ON');
-		console.log('If Template has been assigned then template related details will be displayed.');
+		_l('Block debug mode : ON');
+		_l('If Template has been assigned then template related details will be displayed.');
 	}
-}
+
 
 /*Function.prototype.construct = function(selector, debug = false) {
   	this.selector = document.querySelector(selector);
@@ -24,7 +25,7 @@ function Block(selector, debug = false){
 	this.var = {};
 	this.debug = debug;
 	if(debug){
-		console.log('Block debug mode : ON');
+		_l('Block debug mode : ON');
 	}
 };*/
 
@@ -50,18 +51,18 @@ Block.prototype.parse = function(buffer = false){
 }
 
 Block.prototype.dump = function(){
-	console.log('Block debug instance :------------------------------------->');
+	_l('Block debug instance :------------------------------------->');
 	var output = '';
 	for (var property in this) {
 	  output += property + ': ' + this[property]+'; ';
 	}
-	console.log(output);
+	_l(output);
 	if(this.is_template){
-		console.log('Template debug html :----------------------------------->');
-		console.log(this.parse(true));
+		_l('Template debug html :----------------------------------->');
+		_l(this.parse(true));
 	} else {
-		console.log('Block debug html :----------------------------------->');
-		console.log(this.parse(true));
+		_l('Block debug html :----------------------------------->');
+		_l(this.parse(true));
 	}
 }
 
@@ -80,6 +81,16 @@ Block.prototype.template = function(selector){
 }
 
 Block.prototype.append = function(val = [], callbackFunc = false, needToClear = true){
+	_set_position(this, 'append');
+	this.assignAll(val); 
+	_parse(this); 
+	_render(this); 
+	if(needToClear) _clear(this); 
+	if(typeof callbackFunc === 'function') callbackFunc.apply({});
+}
+
+Block.prototype.prepend = function(val = [], callbackFunc = false, needToClear = true){
+	_set_position(this, 'prepend');
 	this.assignAll(val);
 	_parse(this);
 	_render(this);
@@ -87,10 +98,10 @@ Block.prototype.append = function(val = [], callbackFunc = false, needToClear = 
 	if(typeof callbackFunc === 'function') callbackFunc.apply({});
 }
 
-Block.prototype.cycle = function(arr = [], callbackFunc = false){
-	for (var key in arr) {
-		if (arr.hasOwnProperty(key)) {
-			var val = JSON.parse(arr[key]);
+Block.prototype.cycle = function(arr = [], callbackFunc = false){ 
+	for (var key in arr) { 
+		if (arr.hasOwnProperty(key)) {  
+			var val = (typeof arr[key] !== "object")?JSON.parse(arr[key]):arr[key];
 			_call_hook(this, 'before-append-in-cycle', val);
 			this.append(val, false, false);
 			for (var k in val) {
@@ -133,14 +144,15 @@ function _clear(instance, key = false){
 			instance.var = {};
 		}
 	} else {
-		if (instance.hasOwnProperty(key)) {
-			delete instance[key];
+		if (instance.varTMPL.hasOwnProperty(key)) {
+			delete instance.varTMPL[key];
 		} else {
 			instance.is_template = false;
 			instance.template_selector = '';
 			instance.parseTMPL = '';
 			instance.varTMPL = {};
 			instance.templateHTML = '';
+			instance.is_append = true;
 		}
 	}
 }
@@ -155,12 +167,12 @@ function _assign(instance, key, val){
 	if(instance.debug){
 		var type = (!instance.is_template)?'Block':'Template';
 		var data = (!instance.is_template)?instance.var:instance.varTMPL;
-		console.log(`${type} assign values :------------------------------>`);
-		console.log(data);
+		_l(`${type} assign values :------------------------------>`);
+		_l(data);
 	}
 }
 
-function _parse(instance){
+function _parse(instance){ 
 	if(!instance.is_template){
 		instance.parseHTML = instance.layout;
 	} else {
@@ -169,12 +181,12 @@ function _parse(instance){
 	
 	if(instance.debug) {
 		var type = (!instance.is_template)?'Block':'Template';
-		console.log(`${type} parsing values :----------------------------->`);
+		_l(`${type} parsing values :----------------------------->`);
 	}
 	var data = (!instance.is_template)?instance.var:instance.varTMPL;
 	for(var key in data){
 		if(instance.debug){
-			console.log('pair : '+key+' => '+data[key]);
+			_l('pair : '+key+' => '+data[key]);
 		}
 		if(!instance.is_template){
 			instance.parseHTML = instance.parseHTML.replace('('+key+')', data[key]);
@@ -184,27 +196,51 @@ function _parse(instance){
 	}
 }
 
-function _render(instance, callbackFunc = false){
+function _render(instance, callbackFunc = false){ 
 	if(instance.debug){
 		if(!instance.is_template) {
-			console.log('Block parse html :------------------------------------------------>');
-			console.log(instance.parseHTML);
+			_l('Block parse html :------------------------------------------------>');
+			_l(instance.parseHTML);
 		} else {
-			console.log('Template parse html :------------------------------------------------>');
-			console.log(instance.parseTMPL);
+			_l('Template parse html :------------------------------------------------>');
+			_l(instance.parseTMPL);
 		}
-	}
+	} 
 	if(!instance.is_template) instance.selector.innerHTML = instance.parseHTML;
-	else {
-		var html = instance.selector.innerHTML;
-		html += instance.parseTMPL;
+	else { 
+		if(instance.is_append){
+			var html = instance.selector.innerHTML;
+			html += instance.parseTMPL;
+		} else {
+			var html = instance.parseTMPL;
+			html += instance.selector.innerHTML;
+		}
 		instance.selector.innerHTML = html;
 	}
 	if(typeof callbackFunc === 'function') callbackFunc.apply({});
 }
 
-function _template(instance, selector){
+function _template(instance, selector){ 
 	instance.is_template = true;
 	instance.template_selector = document.querySelector(selector);
 	instance.templateHTML = instance.template_selector.innerHTML.trim();
+}
+
+function _set_position(instance, type){
+	instance.is_append = (type === 'append')?true:false;
+}
+
+function _l(txt){
+    console.log(txt);
+}
+
+function _e(txt){
+    console.error(txt);
+}
+
+function _dd(exp){
+	eval(exp);
+	return false;
+}
+
 }

@@ -1,13 +1,13 @@
 /* Form Validation Class */ 
-function FromValidation(selector, debug = false){
+export function FromValidation(selector, debug = false){
 	this.selector = document.querySelector(selector);
 	this.formSubmitData = {};
 	this.validation_error = false;
 	this.debug = debug;
 	if(this.debug){
-		console.log('FromValidation debug mode : ON');
+		_l('FromValidation debug mode : ON');
 	}
-}
+
 
 FromValidation.prototype.formData = function(dataObj = {}){
 	_setFromData(this, dataObj);
@@ -34,18 +34,18 @@ FromValidation.prototype.setErrorMessages = function(errorMsgObj = {}){
 }
 
 FromValidation.prototype.dump = function(){
-	console.log('FromValidation debug object :------------------------------------->');
+	_l('FromValidation debug object :------------------------------------->');
 	var output = '';
 	for (var property in this) {
 	  output += property + ': ' + this[property]+'; ';
 	}
-	console.log(output);
+	_l(output);
 }
 
 /* Abstruction */
 function _setFromData(obj, dataObj){
 	for(var key in dataObj){
-		if(obj.debug) console.log('form data pair : '+key+' => '+dataObj[key].trim());
+		if(obj.debug) _l('form data pair : '+key+' => '+dataObj[key].trim());
 		obj.formSubmitData[key] = dataObj[key].trim();
 	}
 }
@@ -64,8 +64,8 @@ function _setRules(obj, rules){
 
 function _errorMessages(obj, errorMsgObj){
 	if(obj.debug) {
-		console.log('form error messages :--------------------------------------->');
-		console.log(errorMsgObj);
+		_l('form error messages :--------------------------------------->');
+		_l(errorMsgObj);
 	}
 	obj.errorMessages = errorMsgObj;
 }
@@ -93,4 +93,13 @@ function _validate(obj, callbackFunc = false){
 		}*/ else {}
 	}
 	if(typeof callbackFunc === 'function') callbackFunc.apply({}, [obj.validation_error, obj.block, obj.formSubmitData, obj.selector]);
+}
+
+function _l(txt){
+    console.log(txt);
+}
+
+function _e(txt){
+    console.error(txt);
+}
 }
