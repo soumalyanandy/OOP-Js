@@ -1,3 +1,9 @@
+composer.lock
+package-lock.json
+*webpack.config.js
+vendor
+node_modules
+dist
 
 
 
