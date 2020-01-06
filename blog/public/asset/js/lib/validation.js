@@ -1,40 +1,41 @@
 /* Form Validation Class */ 
-export function FromValidation(selector, debug = false){
+import {_l,_e,_w,_i} from './console';
+export function Validation(selector, debug = false){
 	this.selector = document.querySelector(selector);
 	this.formSubmitData = {};
 	this.validation_error = false;
 	this.debug = debug;
 	if(this.debug){
-		_l('FromValidation debug mode : ON');
+		_l('Validation debug mode : ON');
 	}
 
 
-FromValidation.prototype.formData = function(dataObj = {}){
+Validation.prototype.formData = function(dataObj = {}){
 	_setFromData(this, dataObj);
 }
 
-FromValidation.prototype.getFormData = function(callbackFunc = false){
+Validation.prototype.getFormData = function(callbackFunc = false){
 	_getFormData(this, callbackFunc);
 }
 
-FromValidation.prototype.block = function(blockObj = {}){
+Validation.prototype.block = function(blockObj = {}){
 	_setFormBlock(this,blockObj);
 }
 
-FromValidation.prototype.run = function(callbackFunc = false){
+Validation.prototype.run = function(callbackFunc = false){
 	_validate(this, callbackFunc);
 }
 
-FromValidation.prototype.setRules = function(ruleArr = []){
+Validation.prototype.setRules = function(ruleArr = []){
 	_setRules(this, ruleArr);
 }
 
-FromValidation.prototype.setErrorMessages = function(errorMsgObj = {}){
+Validation.prototype.setErrorMessages = function(errorMsgObj = {}){
 	_errorMessages(this, errorMsgObj);
 }
 
-FromValidation.prototype.dump = function(){
-	_l('FromValidation debug object :------------------------------------->');
+Validation.prototype.dump = function(){
+	_l('Validation debug object :------------------------------------->');
 	var output = '';
 	for (var property in this) {
 	  output += property + ': ' + this[property]+'; ';
@@ -95,11 +96,4 @@ function _validate(obj, callbackFunc = false){
 	if(typeof callbackFunc === 'function') callbackFunc.apply({}, [obj.validation_error, obj.block, obj.formSubmitData, obj.selector]);
 }
 
-function _l(txt){
-    console.log(txt);
-}
-
-function _e(txt){
-    console.error(txt);
-}
 }

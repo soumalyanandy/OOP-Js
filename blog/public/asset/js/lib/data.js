@@ -1,4 +1,5 @@
 /* Data Base File */
+import {_l,_e,_w,_i} from './console';
 export function Data(model, debug = false){
     try{
         if(typeof model === "undefined") throw("Data Error : Please give model name.");
@@ -86,19 +87,4 @@ function _getAll(instance){
 	return instance.SaveData;
 }
 
-function _l(txt){
-    console.log(txt);
-}
-
-function _i(txt){
-    console.info(txt);
-}
-
-function _w(txt){
-    console.warn(txt);
-}
-
-function _e(txt){
-    console.error(txt);
-}
 }

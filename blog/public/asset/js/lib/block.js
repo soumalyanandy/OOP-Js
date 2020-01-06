@@ -1,4 +1,5 @@
 /* Block Class */
+import {_l,_e,_w,_i} from './console';
 export function Block(selector, debug = false){
 	this.selector = document.querySelector(selector);
 	this.template_selector = '';
@@ -228,19 +229,6 @@ function _template(instance, selector){
 
 function _set_position(instance, type){
 	instance.is_append = (type === 'append')?true:false;
-}
-
-function _l(txt){
-    console.log(txt);
-}
-
-function _e(txt){
-    console.error(txt);
-}
-
-function _dd(exp){
-	eval(exp);
-	return false;
 }
 
 }

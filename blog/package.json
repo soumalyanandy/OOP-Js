@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack public/asset/js/blog.js --output dist/bundle.js --mode development"
+    "dev-with-no-config": "webpack public/asset/js/blog.js --output dist/main.js --mode development",
+    "build-with-no-config": "webpack public/asset/js/blog.js --output dist/bundle.js --mode production",
+    "dev" : "webpack --config webpack.config.js"
   },
   "keywords": [
     "es5",

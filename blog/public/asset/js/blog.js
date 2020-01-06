@@ -1,10 +1,12 @@
-import {Block} from './html-parse';
-import {FromValidation} from './form-validation';
-import {Data} from './data';
 /* Blog Javascript File */
+import {_l,_e,_w,_i} from './lib/console';
+import {Element} from './lib/element';
+import {Block} from './lib/block';
+import {Validation} from './lib/validation';
+import {Data} from './lib/data';
 
 window.addEventListener("load", function(){
-	console.log("window load");
+	_l("window load");
 	/* Load database */
 	var Blog = new Data('form');
 	var archives = Blog.getAll();
@@ -40,7 +42,7 @@ window.addEventListener("load", function(){
 		e.preventDefault();
 		e.stopPropagation();
 		
-		var formValidation = new FromValidation('[name=blog_form2]');
+		var formValidation = new Validation('[name=blog_form2]');
 		formValidation.getFormData(function(formData,formEle){ 
 			formData['title'] = formEle.elements["title"].value.trim();
 			formData['category'] = formEle.elements["category"].options[formEle.elements["category"].selectedIndex].value.trim();
@@ -82,14 +84,14 @@ window.addEventListener("load", function(){
 				formEle.elements["file"].value = formSubmitData['file'];
 				formEle.elements["desc"].value = formSubmitData['desc'];
 				if(/data:image\/([a-zA-Z]*);base64,([^\"]*)/g.test(formEle.elements["file"])){
-					console.log("image");
+					_l("image");
 					//var fileReader = new FileReader();
 			      	//fileReader.onloadend = function() {
-			         	//console.log(fileReader.result);
+			         	//_l(fileReader.result);
 			         	formEle.closest(".custom-file").querySelector("input[type=hidden]").value = formSubmitData['file'];
 			         	var img = document.createElement("IMG");
 			         	img.src = formSubmitData['file'];
-			         	//console.log(formEle.closest(".row").previousSibling.previousSibling.querySelector("#preview"));
+			         	//_l(formEle.closest(".row").previousSibling.previousSibling.querySelector("#preview"));
 			      		img.style.width = '100%';
 			      		formEle.closest(".row").previousElementSibling.classList.remove('d-none');
 			      		formEle.closest(".row").previousElementSibling.querySelector("#preview").innerHTML = "";
@@ -112,7 +114,7 @@ window.addEventListener("load", function(){
 					for (var property in getLastBlog) {
 					output += property + ': ' + getLastBlog[property]+'; ';
 					}
-					console.log(output);
+					_l(output);
 					formBlock.assign('form-alert-msg','Blog post successfull.');
 					formBlock.assign('form-alert-msg-class','alert-success');
 					formBlock.assign('form-alert-msg-display','show');
@@ -133,58 +135,84 @@ window.addEventListener("load", function(){
 	});
 	
 	/* file upload */
-	document.forms["blog_form2"].elements["photo"].addEventListener("change", function(e){
-		console.log(this.value);
+	/* document.forms["blog_form2"].elements["photo"].addEventListener("change", function(e){
+		_l(this.value);
 		this.nextSibling.nextSibling.innerText = this.value;
-		console.log(this.files.item(0));
+		_l(this.files.item(0));
 		var THIS = this;
 		var fileReader = new FileReader();
       	fileReader.onloadend = function() {
-         	//console.log(fileReader.result);
+         	//_l(fileReader.result);
          	THIS.closest(".custom-file").querySelector("input[type=hidden]").value = fileReader.result;
          	var img = document.createElement("IMG");
          	img.src = fileReader.result;
-         	//console.log(THIS.closest(".row").previousSibling.previousSibling.querySelector("#preview"));
+         	//_l(THIS.closest(".row").previousSibling.previousSibling.querySelector("#preview"));
       		img.style.width = '100%';
       		THIS.closest(".row").previousElementSibling.classList.remove('d-none')
       		THIS.closest(".row").previousElementSibling.querySelector("#preview").innerHTML = "";
       		THIS.closest(".row").previousElementSibling.querySelector("#preview").appendChild(img);
-      		/*img.onload = function(){
-      			this.src = fileReader.result;
-      		}*/
+      		//img.onload = function(){
+      			//this.src = fileReader.result;
+      		//}
       	}
       	fileReader.readAsDataURL(this.files.item(0));
-	});
+	}); */
 	/*var x = Array.prototype.slice.call(document.querySelectorAll("[name=blog_form]"));
-	console.log(x);
+	_l(x);
 	x.forEach(function(el){
-		console.log(Array.prototype.slice.call(el.querySelectorAll("#photo")));
+		_l(Array.prototype.slice.call(el.querySelectorAll("#photo")));
 	})*/
-	//console.log(Array.prototype.slice.call(x.querySelectorAll("#photo")));
+	//_l(Array.prototype.slice.call(x.querySelectorAll("#photo")));
 
-	/*JS("[name^=blog_form]").dynamic(function(ev, el){
-		console.log(el+" modified !");
-		JS("#photo",el).dynamic('change', function(ev, el){
-			console.log(el+" changed !");
+	/*Element("[name^=blog_form]").dynamic(function(ev, sl, el){
+		_l(sl+" modified !");
+		Element("#photo",sl).on('change', function(ev, sl, el){
+			_l(sl+" changed !");
+			_l(el.value);
+		    el.nextSibling.nextSibling.innerText = el.value;
+		    _l(el.files.item(0));
 		});
 	});*/
 
-	document.forms["blog_form2"].addEventListener('DOMSubtreeModified', function(event) {
-		console.log("Form loaded....");
-		//console.log(document.forms["blog_form"].querySelector("#photo"));
-		if(document.forms["blog_form2"].querySelector("#photo")){
+	Element("#photo", "[name^=blog_form]").on('change', function(ev, sl, el, parent){
+		_l(sl+" changed !");
+		_l(el.value);
+		el.nextSibling.nextSibling.innerText = el.value;
+		_l(el.files.item(0));
+	
+		var fileReader = new FileReader();
+      	fileReader.onloadend = function() {
+			el.closest(".custom-file").querySelector("input[type=hidden]").value = fileReader.result;
+			var img = document.createElement("IMG");
+			img.src = fileReader.result;
+			//_l(el.closest(".row").previousSibling.previousSibling.querySelector("#preview"));
+			 img.style.width = '100%';
+			 el.closest(".row").previousElementSibling.classList.remove('d-none')
+			 el.closest(".row").previousElementSibling.querySelector("#preview").innerHTML = "";
+			 el.closest(".row").previousElementSibling.querySelector("#preview").appendChild(img);
+			 //img.onload = function(){
+				 //this.src = fileReader.result;
+			 //}
+		}
+		fileReader.readAsDataURL(el.files.item(0));
+	});
+
+	//document.forms["blog_form2"].addEventListener('DOMSubtreeModified', function(event) {
+		//_l("Form loaded....");
+		//_l(document.forms["blog_form"].querySelector("#photo"));
+		/* if(document.forms["blog_form2"].querySelector("#photo")){
 			document.forms["blog_form2"].querySelector("#photo").addEventListener("change", function(e){
-				console.log(this.value);
+				_l(this.value);
 				this.nextSibling.nextSibling.innerText = this.value;
-				console.log(this.files.item(0));
+				_l(this.files.item(0));
 				var THIS = this;
 				var fileReader = new FileReader();
 		      	fileReader.onloadend = function() {
-		         	//console.log(fileReader.result);
+		         	//_l(fileReader.result);
 		         	THIS.closest(".custom-file").querySelector("input[type=hidden]").value = fileReader.result;
 		         	var img = document.createElement("IMG");
 		         	img.src = fileReader.result;
-		         	//console.log(THIS.closest(".row").previousSibling.previousSibling.querySelector("#preview"));
+		         	//_l(THIS.closest(".row").previousSibling.previousSibling.querySelector("#preview"));
 		      		img.style.width = '100%';
 		      		THIS.closest(".row").previousElementSibling.classList.remove('d-none')
 		      		THIS.closest(".row").previousElementSibling.querySelector("#preview").innerHTML = "";
@@ -192,21 +220,21 @@ window.addEventListener("load", function(){
 		      	}
 		      	fileReader.readAsDataURL(this.files.item(0));
 			});
-		}
+		} */
 		
 		// file upload 
 		/*document.forms["blog_form"].elements["photo"].addEventListener("change", function(e){
-			console.log(this.value);
+			_l(this.value);
 			this.nextSibling.nextSibling.innerText = this.value;
-			console.log(this.files.item(0));
+			_l(this.files.item(0));
 			var THIS = this;
 			var fileReader = new FileReader();
 	      	fileReader.onloadend = function() {
-	         	//console.log(fileReader.result);
+	         	//_l(fileReader.result);
 	         	THIS.closest(".custom-file").querySelector("input[type=hidden]").value = fileReader.result;
 	         	var img = document.createElement("IMG");
 	         	img.src = fileReader.result;
-	         	//console.log(THIS.closest(".row").previousSibling.previousSibling.querySelector("#preview"));
+	         	//_l(THIS.closest(".row").previousSibling.previousSibling.querySelector("#preview"));
 	      		img.style.width = '100%';
 	      		THIS.closest(".row").previousElementSibling.classList.remove('d-none')
 	      		THIS.closest(".row").previousElementSibling.querySelector("#preview").innerHTML = "";
@@ -214,25 +242,25 @@ window.addEventListener("load", function(){
 	      	}
 	      	fileReader.readAsDataURL(this.files.item(0));
 		});*/
-	});
+	//});
 
 	/*document.forms["blog_form"].addEventListener('readystatechange', event => {
-		console.log(event.target.readyState);
+		_l(event.target.readyState);
 		// Different states of readiness 
 		switch (event.target.readyState) {
 		  case "loading":
-		    console.log('The '+event.target.name+' is still loading.');
+		    _l('The '+event.target.name+' is still loading.');
 		    break;
 		  case "interactive":
-		    console.log('The '+event.target.name+' has finished loading. We can now access the elements.');
+		    _l('The '+event.target.name+' has finished loading. We can now access the elements.');
 		    // But sub-resources such as images, stylesheets and frames are still loading.
 		    //var span = document.createElement("span");
 		    //span.textContent = "A <span> element.";
 		    //document.body.appendChild(span);
 		    break;
 		  case "complete":
-		    console.log('The '+event.target.name+' is fully loaded.');
-		    //console.log("The first CSS rule is: " + document.styleSheets[0].cssRules[0].cssText);
+		    _l('The '+event.target.name+' is fully loaded.');
+		    //_l("The first CSS rule is: " + document.styleSheets[0].cssRules[0].cssText);
 		    break;
 		}
 	});*/
