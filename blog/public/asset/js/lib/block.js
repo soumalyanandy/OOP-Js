@@ -11,7 +11,7 @@ export function Block(selector, debug = false){
 	this.parseTMPL = '';
 	this.var = {};
 	this.varTMPL = {};
-	this.hooks = [];
+	this.hooks = Array(); // [] => Array.prototype
 	this.debug = debug;
 	if(debug){
 		_l('Block debug mode : ON');
@@ -34,7 +34,7 @@ Block.prototype.assign = function(key = '', val = ''){
 	_assign(this, key, val);
 }
 
-Block.prototype.assignAll = function(arr = []){
+Block.prototype.assignAll = function(arr = Array()){
 	for (var key in arr) {
 		if (arr.hasOwnProperty(key)) {
 			_assign(this, key, arr[key]);
@@ -81,7 +81,7 @@ Block.prototype.template = function(selector){
 	_template(this, selector);
 }
 
-Block.prototype.append = function(val = [], callbackFunc = false, needToClear = true){
+Block.prototype.append = function(val = Array(), callbackFunc = false, needToClear = true){
 	_set_position(this, 'append');
 	this.assignAll(val); 
 	_parse(this); 
@@ -90,7 +90,7 @@ Block.prototype.append = function(val = [], callbackFunc = false, needToClear = 
 	if(typeof callbackFunc === 'function') callbackFunc.apply({});
 }
 
-Block.prototype.prepend = function(val = [], callbackFunc = false, needToClear = true){
+Block.prototype.prepend = function(val = Array(), callbackFunc = false, needToClear = true){
 	_set_position(this, 'prepend');
 	this.assignAll(val);
 	_parse(this);
@@ -99,7 +99,7 @@ Block.prototype.prepend = function(val = [], callbackFunc = false, needToClear =
 	if(typeof callbackFunc === 'function') callbackFunc.apply({});
 }
 
-Block.prototype.cycle = function(arr = [], callbackFunc = false){ 
+Block.prototype.cycle = function(arr = Array(), callbackFunc = false){ 
 	for (var key in arr) { 
 		if (arr.hasOwnProperty(key)) {  
 			var val = (typeof arr[key] !== "object")?JSON.parse(arr[key]):arr[key];

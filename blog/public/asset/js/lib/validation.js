@@ -26,7 +26,7 @@ Validation.prototype.run = function(callbackFunc = false){
 	_validate(this, callbackFunc);
 }
 
-Validation.prototype.setRules = function(ruleArr = []){
+Validation.prototype.setRules = function(ruleArr = Array()){
 	_setRules(this, ruleArr);
 }
 
@@ -74,7 +74,7 @@ function _errorMessages(obj, errorMsgObj){
 function _clear(obj){
 	obj.errorMessages = {};
 	obj.block = '';
-	obj.rules = [];
+	obj.rules = Array();
 }
 
 function _validate(obj, callbackFunc = false){ 

@@ -74,7 +74,7 @@ function _get(instance, id){
 }
 
 function _getAll(instance){
-    var keys = [], prop, i;
+    var keys = Array(), prop, i;
     for (prop in localStorage) {
         if (hasOwnProperty.call(localStorage, prop)) {
             keys.push(prop);
