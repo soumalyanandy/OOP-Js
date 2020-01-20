@@ -76,7 +76,7 @@ function _get(instance, id){
 function _getAll(instance){
     var keys = Array(), prop, i;
     for (prop in localStorage) {
-        if (hasOwnProperty.call(localStorage, prop)) {
+        if (hasOwnProperty.call(localStorage, prop) && prop.indexOf(instance.model) !== -1) {
             keys.push(prop);
         }
     }

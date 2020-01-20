@@ -121,7 +121,7 @@ Ele.prototype.dynamic = function(){
     var THIS = this;
     try{
         if(typeof args[0] !== 'function' && typeof args[1] !== 'function') {
-		    throw new Error('Invalid callback in element.js on line no. 93!');
+		    throw new Error('Invalid callback in element.js on line no. 123!');
         }
 
         var event = (typeof args[0] === 'function')?null:args[0].toUpperCase();

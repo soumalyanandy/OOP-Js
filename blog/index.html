@@ -30,13 +30,13 @@
 			  <div class="form-group row">
 			    <label for="title" class="col-sm-2 col-form-label">Title</label>
 			    <div class="col-sm-10">
-			      <input type="text" placeholder="Title" class="form-control" id="title" name="title" />
+			      <input type="text" placeholder="Title" class="form-control" id="title" name="title"  />
 			    </div>
 			  </div>
 			  <div class="form-group row">
-			    <label for="desc" class="col-sm-2 col-form-label">Category</label>
+			    <label for="category" class="col-sm-2 col-form-label">Category</label>
 			    <div class="col-sm-10">
-			      	<select class="custom-select" name="category">
+			      	<select class="custom-select" name="category" id="category">
 			      	  <option value="">Select any</option>
 					  <option value="travel">Travel</option>
 					  <option value="food">Food</option>
@@ -46,18 +46,18 @@
 			    </div>
 			  </div>
 			  <div class="form-group row d-none">
-			  	<label for="title" class="col-sm-2 col-form-label">Preview</label>
+			  	<label for="preview" class="col-sm-2 col-form-label">Preview</label>
 			  	<div class="col-sm-10">
 			      	<div class="img-thumbnail" id="preview"></div>
 			    </div>
 			  </div>
 			  <div class="form-group row">
-			    <label for="title" class="col-sm-2 col-form-label">Photo</label>
+			    <label for="photo" class="col-sm-2 col-form-label">Photo</label>
 			    <div class="col-sm-10">
 			      	<div class="custom-file">
 					  <input type="file" class="custom-file-input" id="photo" name="photo">
-					  <label class="custom-file-label" for="photo">Choose file</label>
-					  <input type="hidden" name="file">
+					  <label class="custom-file-label" id="file_label" for="photo">Choose file</label>
+					  <input type="hidden" name="file" id="file">
 					</div>
 			    </div>
 			  </div>

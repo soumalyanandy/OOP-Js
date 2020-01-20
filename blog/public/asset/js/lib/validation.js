@@ -4,6 +4,7 @@ export function Validation(selector, debug = false){
 	this.selector = document.querySelector(selector);
 	this.formSubmitData = {};
 	this.validation_error = false;
+	this.ignoreFieldCheck = '#valid';
 	this.debug = debug;
 	if(this.debug){
 		_l('Validation debug mode : ON');
@@ -78,8 +79,9 @@ function _clear(obj){
 }
 
 function _validate(obj, callbackFunc = false){ 
+	var key='', val='';
 	for(var key in obj.formSubmitData){
-		if(!obj.validation_error && obj.rules.indexOf('required') !== -1 && obj.formSubmitData[key] == ""){ 
+		if(key.indexOf(obj.ignoreFieldCheck) === -1 && !obj.validation_error && obj.rules.indexOf('required') !== -1 && obj.formSubmitData[key] == ""){ 
 			obj.validation_error = true;
 			obj.block.assign('form-alert-msg',obj.errorMessages[key]['required']);
 		} /*else if(obj.formSubmitData['category'] == ""){
@@ -91,7 +93,12 @@ function _validate(obj, callbackFunc = false){
 		} else if(obj.formSubmitData['desc'] == ""){
 			obj.validation_error = true;
 			obj.block.assign('form-alert-msg',obj.errorMessages['title']['required']);
-		}*/ else {}
+		}*/ else {
+			val = obj.formSubmitData[key];
+			delete obj.formSubmitData[key];
+			key = key.replace(obj.ignoreFieldCheck,'');
+			obj.formSubmitData[key] = val;
+		}
 	}
 	if(typeof callbackFunc === 'function') callbackFunc.apply({}, [obj.validation_error, obj.block, obj.formSubmitData, obj.selector]);
 }

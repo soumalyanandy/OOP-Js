@@ -44,9 +44,14 @@ window.addEventListener("load", function(){
 		
 		var formValidation = new Validation('[name=blog_form2]');
 		formValidation.getFormData(function(formData,formEle){ 
+			/* 
+				if concat '#valid' with any of the fields 
+				then that field will not get validated.
+			*/
 			formData['title'] = formEle.elements["title"].value.trim();
 			formData['category'] = formEle.elements["category"].options[formEle.elements["category"].selectedIndex].value.trim();
 			formData['file'] = formEle.elements["file"].value.trim();
+			formData['file_path#valid'] = formEle.elements["file"].previousElementSibling.innerText;
 			formData['desc'] = formEle.elements["desc"].value.trim();
 		});
 		/* form data */
@@ -78,28 +83,26 @@ window.addEventListener("load", function(){
 			if(isInvalid){
 				formBlock.assign('form-alert-msg-class', 'alert-danger');
 				formBlock.assign('form-alert-msg-display','show');
-				/* set data */
-				formEle.elements["title"].value = formSubmitData['title'];
-				formEle.elements["category"].value = formSubmitData['category'];
-				formEle.elements["file"].value = formSubmitData['file'];
-				formEle.elements["desc"].value = formSubmitData['desc'];
-				if(/data:image\/([a-zA-Z]*);base64,([^\"]*)/g.test(formEle.elements["file"]) && 1==2){
-					_l("image");
-					//var fileReader = new FileReader();
-			      	//fileReader.onloadend = function() {
-			         	//_l(fileReader.result);
-			         	formEle.closest(".custom-file").querySelector("input[type=hidden]").value = formSubmitData['file'];
-			         	var img = document.createElement("IMG");
-			         	img.src = formSubmitData['file'];
-			         	//_l(formEle.closest(".row").previousSibling.previousSibling.querySelector("#preview"));
-			      		img.style.width = '100%';
-			      		formEle.closest(".row").previousElementSibling.classList.remove('d-none');
-			      		formEle.closest(".row").previousElementSibling.querySelector("#preview").innerHTML = "";
-			      		formEle.closest(".row").previousElementSibling.querySelector("#preview").appendChild(img);
-			      	//}
-			      	//fileReader.readAsDataURL(formSubmitData['file']);
-				}
 				formBlock.render();
+				
+				/* set data */
+				formEle.elements.namedItem("title").value = formSubmitData['title'];
+				formEle.elements.namedItem("category").value = formSubmitData['category'];
+				formEle.elements.namedItem("file").previousElementSibling.value = formSubmitData['file_path'];
+				formEle.elements.namedItem("file").value = formSubmitData['file'];
+				formEle.elements.namedItem("desc").value = formSubmitData['desc'];
+				
+				if(/data:image\/([a-zA-Z]*);base64,([^\"]*)/g.test(formEle.elements["file"].value)){
+		         	var hid_file = formEle.querySelector("input[type=hidden][name=file]");
+		         	hid_file.previousElementSibling.innerText = formSubmitData['file_path'];
+		         	hid_file.value = formSubmitData['file'];
+		         	var img = document.createElement("IMG");
+		         	img.src = formSubmitData['file'];
+		      		img.style.width = '100%';
+		      		hid_file.closest(".row").previousElementSibling.classList.remove('d-none');
+		      		hid_file.closest(".row").previousElementSibling.querySelector("#preview").innerHTML = "";
+		      		hid_file.closest(".row").previousElementSibling.querySelector("#preview").appendChild(img);
+				}
 			} else {
 				formBlock.assign('form-alert-msg-class','');
 				formBlock.assign('form-alert-msg-display','');
@@ -175,7 +178,7 @@ window.addEventListener("load", function(){
 	});*/
 	
 	Element(".custom-file-input", "[name^=blog_form]").dynamic('change', function(ev, el, parent){ 
-		Element(el).get().nextSibling.nextSibling.innerText = Element(el).get().value;
+		//Element(el).get().nextSibling.nextSibling.innerText = Element(el).get().value;
 		if(Element(el).get().files.item(0) != null){
 			Element(el).get().nextSibling.nextSibling.innerText = Element(el).get().value;
 			var fileReader = new FileReader();
