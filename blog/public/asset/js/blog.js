@@ -4,9 +4,16 @@ import {Element} from './lib/element';
 import {Block} from './lib/block';
 import {Validation} from './lib/validation';
 import {Data} from './lib/data';
+import {Route} from '/lib/route';
 
 window.addEventListener("load", function(){
 	_l("window load");
+	/* Load route */
+	var URLRoute = new Route('url')
+	URLRoute.when('/edit',function(){
+		alert("edit");
+	});
+
 	/* Load database */
 	var Blog = new Data('form');
 	var archives = Blog.getAll();
@@ -29,6 +36,8 @@ window.addEventListener("load", function(){
 	/* Register a hook in cycle */
 	blogListBlock.hook_reg({
 		'before-append-in-cycle' : function(val){ 
+			blogListBlock.assign('edit_link','javascript:URLRoute.goto("edit")');
+			blogListBlock.assign('delete_link','javascript:URLRoute.goto("delete")');
 			blogListBlock.assign('img','<img alt="image" class="img-thumbnail" src="'+val['file']+'" />');
 		}
 	});
