@@ -21,59 +21,59 @@
 	  		<h2> Blog Form</h2>
 	  		<!-- <form name="blog_form1" id="blogFormView1"></form> -->
 	  		<form name="blog_form2" id="blogFormBlock">
-	  			<div id="alert" class="alert (form-alert-msg-class) alert-dismissible fade (form-alert-msg-display)" role="alert">
+	  			<!-- <div id="alert" class="alert (form-alert-msg-class) alert-dismissible fade (form-alert-msg-display)" role="alert">
 				 (form-alert-msg)
-				  <!-- <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+				  <!- <button type="button" class="close" data-dismiss="alert" aria-label="Close">
 				    <span aria-hidden="true">&times;</span>
-				  </button> -->
+				  </button> ->
 				</div>
-			  <div class="form-group row">
-			    <label for="title" class="col-sm-2 col-form-label">Title</label>
-			    <div class="col-sm-10">
-			      <input type="text" placeholder="Title" class="form-control" id="title" name="title"  />
-			    </div>
-			  </div>
-			  <div class="form-group row">
-			    <label for="category" class="col-sm-2 col-form-label">Category</label>
-			    <div class="col-sm-10">
-			      	<select class="custom-select" name="category" id="category">
-			      	  <option value="">Select any</option>
-					  <option value="travel">Travel</option>
-					  <option value="food">Food</option>
-					  <option value="shopping">Shopping</option>
-					  <option value="book">Book</option>
-					</select>
-			    </div>
-			  </div>
-			  <div class="form-group row d-none">
-			  	<label for="preview" class="col-sm-2 col-form-label">Preview</label>
-			  	<div class="col-sm-10">
-			      	<div class="img-thumbnail" id="preview"></div>
-			    </div>
-			  </div>
-			  <div class="form-group row">
-			    <label for="photo" class="col-sm-2 col-form-label">Photo</label>
-			    <div class="col-sm-10">
-			      	<div class="custom-file">
-					  <input type="file" class="custom-file-input" id="photo" name="photo">
-					  <label class="custom-file-label" id="file_label" for="photo">Choose file</label>
-					  <input type="hidden" name="file" id="file">
+				<div class="form-group row">
+					<label for="title" class="col-sm-2 col-form-label">Title</label>
+					<div class="col-sm-10">
+					<input type="text" placeholder="Title" class="form-control" id="title" name="title"  />
 					</div>
-			    </div>
-			  </div>
-			  <div class="form-group row">
-			    <label for="desc" class="col-sm-2 col-form-label">Description</label>
-			    <div class="col-sm-10">
-			      <textarea class="form-control" id="desc" name="desc" placeholder="About blog"></textarea>
-			    </div>
-			  </div>
-			  <button type="submit" class="btn btn-primary">Save</button>
+				</div>
+				<div class="form-group row">
+					<label for="category" class="col-sm-2 col-form-label">Category</label>
+					<div class="col-sm-10">
+						<select class="custom-select" name="category" id="category">
+						<option value="">Select any</option>
+						<option value="travel">Travel</option>
+						<option value="food">Food</option>
+						<option value="shopping">Shopping</option>
+						<option value="book">Book</option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group row d-none">
+					<label for="preview" class="col-sm-2 col-form-label">Preview</label>
+					<div class="col-sm-10">
+						<div class="img-thumbnail" id="preview"></div>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="photo" class="col-sm-2 col-form-label">Photo</label>
+					<div class="col-sm-10">
+						<div class="custom-file">
+						<input type="file" class="custom-file-input" id="photo" name="photo">
+						<label class="custom-file-label" id="file_label" for="photo">Choose file</label>
+						<input type="hidden" name="file" id="file">
+						</div>
+					</div>
+				</div>
+				<div class="form-group row">
+					<label for="desc" class="col-sm-2 col-form-label">Description</label>
+					<div class="col-sm-10">
+					<textarea class="form-control" id="desc" name="desc" placeholder="About blog"></textarea>
+					</div>
+				</div>
+				<button type="submit" class="btn btn-primary">Save</button> -->
 			</form>
 		  </div>
-		  <div class="col-xs-12 col-md-6" id="blog_list" style="overflow-y: scroll; border: 1px black dotted; height : 425px">
+		  <div class="col-xs-12 col-md-6" id="blogListBlock" style="overflow-y: scroll; border: 1px black dotted; height : 425px">
 			  
 		  </div>
-		  <div class="d-none" id="_blank_blog_row_template">
+		  <!-- <template class="d-none" id="_blank_blog_row_template">
 				<div class="row">
 					<div class="col-sm-6">
 						(img)
@@ -84,12 +84,12 @@
 						<p>(desc)</p>
 					</div>
 					<div class="col-sm-12 mt-3">
-						<a href="(edit_link)" class="btn btn-info">Edit</a>
-						<a href="(delete_link)" class="btn btn-danger">Delete</a>
+						<a _redirect="(edit_link)" id="(edit_blog_btn)" class="btn btn-info editBtn">Edit</a>
+						<a _redirect="(delete_link)" id="(delete_blog_btn)" class="btn btn-danger deleteBtn">Delete</a>
 					</div>
 				</div>
 				<hr>
-		  </div>
+		  </template> -->
 	  </div>
 	</div>
 	<script type="text/javascript" src="public/bootstrap/dist/js/bootstrap.js"></script>
@@ -128,12 +128,18 @@
 			    //document.body.appendChild(span);
 			    break;
 			  case "complete":
+			  
 			    //console.log('The page is fully loaded.');
 			    //console.log("The first CSS rule is: " + document.styleSheets[0].cssRules[0].cssText);
 			    break;
 			}
 		});
 		
+
+		function goto(url){
+			console.log(URLRoute);
+			URLRoute.goto(url);
+		}
 		/*$(document).ready(function(){
 			console.log("document ready !");
 		});*/

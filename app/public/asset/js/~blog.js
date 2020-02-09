@@ -1,22 +1,62 @@
-/* Blog Javascript File */
+/* Bootstrap Javascript File (Front Controller) */
+
+/* include libraries */
 import {_l,_e,_w,_i} from './lib/console';
-import {Element} from './lib/element';
+import {el} from './lib/element';
 import {Block} from './lib/block';
 import {Validation} from './lib/validation';
 import {Data} from './lib/data';
-import {Route} from '/lib/route';
+import {Route} from './lib/route';
+
+/* include controllers */
+import {Blog} from './controller/blog';
+
+/* Load route */
+var URLRoute = new Route('url', true);
+//var HashRoute = new Route('hash');
+
+/* Load controller */
+var blogControl = new Blog();
+
+/* assign resources to blog controller */
+blogControl.route = URLRoute;
+//blogControl._Data = Data;
+//blogControl._Block = Block;
+//blogControl._Validation = Validation;
+//blogControl._el = el;
 
 window.addEventListener("load", function(){
 	_l("window load");
-	/* Load route */
-	var URLRoute = new Route('url')
-	URLRoute.when('/edit',function(){
-		alert("edit");
+	/* Routes */
+	URLRoute.when('/edit/(:any)',function(el){
+		//alert("edit "+el.id);
+		blogControl.edit(el);
 	});
+	URLRoute.when('/delete/(:any)',function(el){
+		//alert("delete "+el.id);
+		blogControl.delete(el);
+		//URLRoute.goto('/');
+	});
+	URLRoute.listen();
+
+	/* Routes */
+	/*HashRoute.when('/edit/(:any)',function(el){
+		alert("edit "+el.id);
+	});
+	HashRoute.when('/delete/(:any)',function(el){
+		alert("delete "+el.id);
+		HashRoute.goto('/');
+	});
+	HashRoute.listen();*/
+
+	
+	//blogControl.Data = Data;
+
+	//blogControl.list();
 
 	/* Load database */
-	var Blog = new Data('form');
-	var archives = Blog.getAll();
+	var BlogModel = new Data('form');
+	var archives = BlogModel.getAll();
 	
 	/* blog from block object */
 	var blogFormBlock = new Block('#blogFormBlock');
@@ -36,13 +76,40 @@ window.addEventListener("load", function(){
 	/* Register a hook in cycle */
 	blogListBlock.hook_reg({
 		'before-append-in-cycle' : function(val){ 
-			blogListBlock.assign('edit_link','javascript:URLRoute.goto("edit")');
-			blogListBlock.assign('delete_link','javascript:URLRoute.goto("delete")');
+			blogListBlock.assign('edit_blog_btn','editBlogBtn'+val['_key']);
+			blogListBlock.assign('edit_link','/edit/'+val['_key']);
+			blogListBlock.assign('delete_blog_btn','deleteBlogBtn'+val['_key']);
+			blogListBlock.assign('delete_link','/delete/'+val['_key']);
 			blogListBlock.assign('img','<img alt="image" class="img-thumbnail" src="'+val['file']+'" />');
 		}
-	});
-	
-	blogListBlock.cycle(archives);
+	}); 
+	/*blogListBlock.hook_reg({
+		'after-render' : function(val){
+			
+		}
+	});*/
+	/* manage event into the block */
+	blogListBlock.cycle(archives, function(blockEl){
+		// After listing blog, listen to click function 
+		el(blockEl).find('.editBtn').on('click', function(ev, ele, parent){
+			var ele = el(ele).get();
+			//var el = ev.target; 
+			if(ele.hasAttribute('_href')){
+				var route = ele.getAttribute('_href');
+				URLRoute.goto(route, ele);
+				//HashRoute.goto(route, ele);
+			}
+		});
+		el(blockEl).find('.deleteBtn').on('click', function(ev, ele, parent){
+			var ele = el(ele).get();
+			//var el = ev.target; 
+			if(ele.hasAttribute('_href')){
+				var route = ele.getAttribute('_href');
+				URLRoute.goto(route, ele);
+				//HashRoute.goto(route, ele);
+			}
+		});
+	}); 
 	
 
 	/* listen to form submit event */
@@ -117,11 +184,11 @@ window.addEventListener("load", function(){
 				formBlock.assign('form-alert-msg-display','');
 			
 				/* save in local storage */
-				var Blog = new Data('form');
-				Blog.data(formSubmitData);
-				var LastSaveId = Blog.save();
+				var BlogModel = new Data('form');
+				BlogModel.data(formSubmitData);
+				var LastSaveId = BlogModel.save();
 				if(LastSaveId){
-					var getLastBlog = Blog.get(LastSaveId);
+					var getLastBlog = BlogModel.get(LastSaveId);
 					var output = '';
 					for (var property in getLastBlog) {
 					output += property + ': ' + getLastBlog[property]+'; ';
@@ -176,9 +243,9 @@ window.addEventListener("load", function(){
 	})*/
 	//_l(Array.prototype.slice.call(x.querySelectorAll("#photo")));
 
-	/*Element("[name^=blog_form]").dynamic(function(ev, sl, el){
+	/*el("[name^=blog_form]").dynamic(function(ev, sl, el){
 		_l(sl+" modified !");
-		Element("#photo",sl).on('change', function(ev, sl, el){
+		el("#photo",sl).on('change', function(ev, sl, el){
 			_l(sl+" changed !");
 			_l(el.value);
 		    el.nextSibling.nextSibling.innerText = el.value;
@@ -186,25 +253,25 @@ window.addEventListener("load", function(){
 		});
 	});*/
 	
-	Element(".custom-file-input", "[name^=blog_form]").dynamic('change', function(ev, el, parent){ 
-		//Element(el).get().nextSibling.nextSibling.innerText = Element(el).get().value;
-		if(Element(el).get().files.item(0) != null){
-			Element(el).get().nextSibling.nextSibling.innerText = Element(el).get().value;
+	el(".custom-file-input", "[name^=blog_form]").dynamic('change', function(ev, el, parent){ 
+		//el(el).get().nextSibling.nextSibling.innerText = el(el).get().value;
+		if(el(el).get().files.item(0) != null){
+			el(el).get().nextSibling.nextSibling.innerText = el(el).get().value;
 			var fileReader = new FileReader();
 			fileReader.onloadend = function() {
-				Element(el).get().closest(".custom-file").querySelector("input[type=hidden]").value = fileReader.result;
+				el(el).get().closest(".custom-file").querySelector("input[type=hidden]").value = fileReader.result;
 				var img = document.createElement("IMG");
 				img.src = fileReader.result;
 				//_l(el.closest(".row").previousSibling.previousSibling.querySelector("#preview"));
 				img.style.width = '100%';
-				Element(el).get().closest(".row").previousElementSibling.classList.remove('d-none')
-				Element(el).get().closest(".row").previousElementSibling.querySelector("#preview").innerHTML = "";
-				Element(el).get().closest(".row").previousElementSibling.querySelector("#preview").appendChild(img);
+				el(el).get().closest(".row").previousElementSibling.classList.remove('d-none')
+				el(el).get().closest(".row").previousElementSibling.querySelector("#preview").innerHTML = "";
+				el(el).get().closest(".row").previousElementSibling.querySelector("#preview").appendChild(img);
 				//img.onload = function(){
 					//this.src = fileReader.result;
 				//}
 			}
-			fileReader.readAsDataURL(Element(el).get().files.item(0));
+			fileReader.readAsDataURL(el(el).get().files.item(0));
 		}
 	});
 
@@ -276,3 +343,7 @@ window.addEventListener("load", function(){
 		}
 	});*/
 });
+
+/* function goto(url){
+			URLRoute.goto(url);
+		} */

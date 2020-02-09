@@ -19,105 +19,116 @@ export function Block(selector, debug = false){
 	}
 
 
-/*Function.prototype.construct = function(selector, debug = false) {
-  	this.selector = document.querySelector(selector);
-	this.layout = this.selector.innerHTML;
-	this.parseHTML = '';
-	this.var = {};
-	this.debug = debug;
-	if(debug){
-		_l('Block debug mode : ON');
-	}
-};*/
-
-Block.prototype.assign = function(key = '', val = ''){
-	_assign(this, key, val);
-}
-
-Block.prototype.assignAll = function(arr = Array()){
-	for (var key in arr) {
-		if (arr.hasOwnProperty(key)) {
-			_assign(this, key, arr[key]);
+	/*Function.prototype.construct = function(selector, debug = false) {
+		this.selector = document.querySelector(selector);
+		this.layout = this.selector.innerHTML;
+		this.parseHTML = '';
+		this.var = {};
+		this.debug = debug;
+		if(debug){
+			_l('Block debug mode : ON');
 		}
+	};*/
+
+	Block.prototype.empty = function(){
+		this.selector.innerHTML = "";
 	}
-}
 
-Block.prototype.parse = function(buffer = false){
-	_parse(this);
-	if(buffer){
-		return (!this.is_template)?this.parseHTML:this.parseTMPL;
-	} else {
-		_render(this);
+	Block.prototype.assign = function(key = '', val = ''){
+		_assign(this, key, val);
 	}
-}
 
-Block.prototype.dump = function(){
-	_l('Block debug instance :------------------------------------->');
-	var output = '';
-	for (var property in this) {
-	  output += property + ': ' + this[property]+'; ';
-	}
-	_l(output);
-	if(this.is_template){
-		_l('Template debug html :----------------------------------->');
-		_l(this.parse(true));
-	} else {
-		_l('Block debug html :----------------------------------->');
-		_l(this.parse(true));
-	}
-}
-
-Block.prototype.render = function(buffer = false, callbackFunc = false){
-	if(!buffer){
-		_parse(this);
-		_render(this, callbackFunc);
-		_clear(this);
-	} else {
-		return this.parse(true);
-	}
-}
-
-Block.prototype.template = function(selector){
-	_template(this, selector);
-}
-
-Block.prototype.append = function(val = Array(), callbackFunc = false, needToClear = true){
-	_set_position(this, 'append');
-	this.assignAll(val); 
-	_parse(this); 
-	_render(this); 
-	if(needToClear) _clear(this); 
-	if(typeof callbackFunc === 'function') callbackFunc.apply({});
-}
-
-Block.prototype.prepend = function(val = Array(), callbackFunc = false, needToClear = true){
-	_set_position(this, 'prepend');
-	this.assignAll(val);
-	_parse(this);
-	_render(this);
-	if(needToClear) _clear(this);
-	if(typeof callbackFunc === 'function') callbackFunc.apply({});
-}
-
-Block.prototype.cycle = function(arr = Array(), callbackFunc = false){ 
-	for (var key in arr) { 
-		if (arr.hasOwnProperty(key)) {  
-			var val = (typeof arr[key] !== "object")?JSON.parse(arr[key]):arr[key];
-			_call_hook(this, 'before-append-in-cycle', val);
-			this.append(val, false, false);
-			for (var k in val) {
-				if (val.hasOwnProperty(k)) {
-					_clear(this, k);
-				}
+	Block.prototype.assignAll = function(arr = Array()){
+		for (var key in arr) {
+			if (arr.hasOwnProperty(key)) {
+				_assign(this, key, arr[key]);
 			}
 		}
 	}
-	_clear(this);
-	if(typeof callbackFunc === 'function') callbackFunc.apply({});
-}
 
-Block.prototype.hook_reg = function(hookObj = {}){
-	_hooks(this, hookObj);
+	Block.prototype.parse = function(buffer = false){
+		_parse(this);
+		if(buffer){
+			return (!this.is_template)?this.parseHTML:this.parseTMPL;
+		} else {
+			_render(this);
+		}
+	}
+
+	Block.prototype.dump = function(){
+		_l('Block debug instance :------------------------------------->');
+		var output = '';
+		for (var property in this) {
+		output += property + ': ' + this[property]+'; ';
+		}
+		_l(output);
+		if(this.is_template){
+			_l('Template debug html :----------------------------------->');
+			_l(this.parse(true));
+		} else {
+			_l('Block debug html :----------------------------------->');
+			_l(this.parse(true));
+		}
+	}
+
+	Block.prototype.render = function(buffer = false, callbackFunc = false){
+		if(!buffer){
+			_parse(this);
+			_render(this, callbackFunc);
+			_clear(this);
+		} else {
+			return this.parse(true);
+		}
+	}
+
+	Block.prototype.template = function(selector){
+		_template(this, selector);
+	}
+
+	Block.prototype.templateRaw = function(html){
+		_templateRaw(this, html);
+	}
+	
+	Block.prototype.append = function(val = Array(), callbackFunc = false, needToClear = true){
+		_set_position(this, 'append');
+		this.assignAll(val); 
+		_parse(this); 
+		_render(this); 
+		if(needToClear) _clear(this); 
+		if(typeof callbackFunc === 'function') callbackFunc.apply({},[this.selector]);
+	}
+
+	Block.prototype.prepend = function(val = Array(), callbackFunc = false, needToClear = true){
+		_set_position(this, 'prepend');
+		this.assignAll(val);
+		_parse(this);
+		_render(this);
+		if(needToClear) _clear(this);
+		if(typeof callbackFunc === 'function') callbackFunc.apply({},[this.selector]);
+	}
+
+	Block.prototype.cycle = function(arr = Array(), callbackFunc = false){ 
+		for (var key in arr) { 
+			if (arr.hasOwnProperty(key)) {  
+				var val = (typeof arr[key] !== "object")?JSON.parse(arr[key]):arr[key];
+				val["_key"] = key;
+				_call_hook(this, 'before-append-in-cycle', val);
+				this.append(val, false, false);
+				for (var k in val) {
+					if (val.hasOwnProperty(k)) {
+						_clear(this, k);
+					}
+				}
+			}
+		}
+		_clear(this);
+		_call_hook(this, 'after-cycle-before-callback'); //middleware
+		if(typeof callbackFunc === 'function') callbackFunc.apply({},[this.selector]);
+	}
+
+	Block.prototype.hook_reg = function(hookObj = {}){
+		_hooks(this, hookObj);
+	}
 }
 
 /* Abstructions */
@@ -125,11 +136,12 @@ function _hooks(instance, hook = {}){
 	instance.hooks.push(hook);
 }
 
-function _call_hook(instance, key, val){
+function _call_hook(instance, key, val = ''){
 	for (var i=0; i < instance.hooks.length; i++) {
 		var hook = instance.hooks[i];
 		if(hook.hasOwnProperty(key)){ 
 			if(typeof hook[key] === 'function'){
+				//_l(key+" hook called from Block.js");
 				hook[key].apply({}, [val]);
 			}
 		}
@@ -218,6 +230,7 @@ function _render(instance, callbackFunc = false){
 		}
 		instance.selector.innerHTML = html;
 	}
+	_call_hook(instance, 'after-render-before-callback'); //middleware
 	if(typeof callbackFunc === 'function') callbackFunc.apply({});
 }
 
@@ -227,8 +240,11 @@ function _template(instance, selector){
 	instance.templateHTML = instance.template_selector.innerHTML.trim();
 }
 
-function _set_position(instance, type){
-	instance.is_append = (type === 'append')?true:false;
+function _templateRaw(instance, html){ 
+	instance.is_template = true;
+	instance.templateHTML = html;
 }
 
+function _set_position(instance, type){
+	instance.is_append = (type === 'append')?true:false;
 }
