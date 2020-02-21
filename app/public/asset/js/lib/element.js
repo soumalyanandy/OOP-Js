@@ -2,15 +2,13 @@
 import {_l,_e,_w,_i} from './console';
 import {Prototype} from './prototype';
 import {Helper} from './helper';
-import {Block} from './block';
-import {Validation} from './validation';
-import {Data} from './data';
 import {Route} from './route';
+import {Module} from './module';
 
-/* Load/Update Window Object */
+/* Add/Update Window Object */
 window.Array = Prototype.Array;
-windox.NodeList = Prototype.NodeList;
-window.URLRoute = new Route('hash', true);
+window.NodeList = Prototype.NodeList;
+window.State = new Route('hash', true);
 
 /* Constants */
 const system = window.window;
@@ -73,7 +71,7 @@ Ele.prototype.set = function(selector, parent = null){
         } else {
             this.id = this.parent.tagName+"#"+this.parent.id;
         }
-        this.target = this.elements[this.id] = Array.prototype.slice.call((this.parent).querySelectorAll(parent+selector));
+        this.target = this.elements[this.id] = (this.parent).querySelectorAll(parent+selector).toArray(); //Array.prototype.slice.call((this.parent).querySelectorAll(parent+selector));
         
         var THIS = this;
         for (var key in this.elements) {
@@ -102,7 +100,7 @@ Ele.prototype.getAll = function(id = null){
 }
 
 Ele.prototype.find = function(selector){
-    this.target = Array.prototype.slice.call((this.get()).querySelectorAll(selector));
+    this.target = (this.get()).querySelectorAll(selector).toArray(); //Array.prototype.slice.call((this.get()).querySelectorAll(selector));
     return this;
 }
 
@@ -140,30 +138,9 @@ Ele.prototype.on = function(){
             var modules = (args[1] instanceof Array)?args[1]:[];
             var callback = (typeof args[2] === 'function')?args[2]:function(){};
             
-            var resources = {};
-            (modules).forEach(function(module, i){
-                _l(module.name);
-                // module object
-                resources[module.name] = new module();
-
-                // get controls 
-                (resources[module.name].controls).forEach(function(control, i){
-                    resources[module.name][control.name] = new control();
-                    // assign resources to controls 
-                    resources[module.name][control.name]._Route = URLRoute;
-                    resources[module.name][control.name]._Data = Data;
-                    resources[module.name][control.name]._Block = Block;
-                    resources[module.name][control.name]._Validation = Validation;
-                    resources[module.name][control.name]._el = el;
-                    resources[module.name][control.name]._View = resources[module.name].views[control.name];
-                    //resources.push(resource);
-                });
-
-                // add routes
-                for(var route in resources[module.name].routes){
-                    URLRoute.when(route, resources[module.name].routes[route]);
-                }
-            });
+            /* Load module */
+            var module = new Module();
+            module.load(modules);
         } else {
             if(typeof args[0] !== 'function' && typeof args[1] !== 'function') {
                 throw new Error('Invalid callback in element.js.');
@@ -187,9 +164,9 @@ Ele.prototype.on = function(){
                 var parent_selector = (THIS.parent !== doc)?THIS.parent.tagName+"#"+THIS.parent.id:doc; 
                 _w("Event : "+(EVENTS[event] || EVENTS.DOM_MODIFY));
                 _w("Element : "+e.target);
-                URLRoute.listen();
+                State.listen();
                 if(args.length == 3){
-                    callback.apply({},[e, doc, resources]);
+                    callback.apply({},[e, doc, State.modules]);
                 } else {
                     callback.apply({},[e, selector, parent_selector, args.slice(2)]); //, el
                 }
@@ -319,7 +296,7 @@ Ele.prototype.isElement = function(o){
 
 /* Abstruction */
 function _attachEvent(instance, target, event, callBackFunc, useCapture = false){
-    if(!target.id && target !== doc){
+    if(!target.id && !target instanceof HTMLDocument && !target instanceof Window){
         _e(target.tagName+" Element must have an ID.");
         return false;
     }
@@ -327,26 +304,30 @@ function _attachEvent(instance, target, event, callBackFunc, useCapture = false)
     /* check element events */
     var evt = [];
     var event_exists = false;
-    if(target.hasAttribute('event')){
+    _l(target);
+    if(target.hasAttribute){
         evt = target.getAttribute('event');
+        evt = evt == null?[]:evt;
+        _l(evt.indexOf(event));
         if(evt.indexOf(event) === -1){
             evt.push(event);
         } else {
             event_exists = true;
         }
     } 
-
-    if(typeof instance.observe['window'] === "undefined" && target instanceof Window){
+    _l(evt);
+    if (target.hasAttribute && !event_exists) { _l("ok");  
+        target.setAttribute('event', evt);
+        instance.observe[target.tagName+"#"+target.id] = evt;
+        (target.addEventListener)?target.addEventListener(event, callBackFunc, useCapture) : target.attachEvent(event, callBackFunc, useCapture);
+    } else if(typeof instance.observe['win'] === "undefined" && target instanceof Window){
         instance.observe['win'] = event;
         (target.addEventListener)?target.addEventListener(event, callBackFunc, useCapture) : target.attachEvent(event, callBackFunc, useCapture);
     } else if(typeof instance.observe['doc'] === "undefined" && target instanceof HTMLDocument){
         instance.observe['doc'] = event;
         (target.addEventListener)?target.addEventListener(event, callBackFunc, useCapture) : target.attachEvent(event, callBackFunc, useCapture);
-    } else if (target.hasAttribute('event') && !event_exists) {   
-        target.setAttribute('event', evt);
-        instance.observe[target.tagName+"#"+target.id] = evt;
-        (target.addEventListener)?target.addEventListener(event, callBackFunc, useCapture) : target.attachEvent(event, callBackFunc, useCapture);
     } 
+    _l(instance.observe);
 }
 
 function _detachEvent(instance, target, event, callBackFunc, useCapture = true){
@@ -354,7 +335,7 @@ function _detachEvent(instance, target, event, callBackFunc, useCapture = true){
     /* check element events */
     var evt = [];
     var event_exists = false;
-    if(target.hasAttribute('event')){
+    if(target.hasAttribute){
         evt = target.getAttribute('event');
         if(evt.indexOf(event) === -1){
             return false;
@@ -364,7 +345,7 @@ function _detachEvent(instance, target, event, callBackFunc, useCapture = true){
         }
     } 
 
-    if(typeof instance.observe['window'] !== "undefined" && target instanceof Window){
+    if(typeof instance.observe['win'] !== "undefined" && target instanceof Window){
         delete instance.observe['win'];
         (target.removeEventListener)?target.removeEventListener(event, callBackFunc, useCapture) : target.detachEvent(event, callBackFunc, useCapture);
     } else if(typeof instance.observe['doc'] !== "undefined" && target instanceof HTMLDocument){

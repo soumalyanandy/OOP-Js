@@ -1,18 +1,35 @@
 /* Block Class */
 import {_l,_e,_w,_i} from './console';
-export function Block(selector, debug = false){
-	this.selector = document.querySelector(selector);
-	this.template_selector = '';
-	this.is_template = false;
-	this.is_append = true;
-	this.templateHTML = '';
-	this.layout = this.selector.innerHTML;
-	this.parseHTML = '';
-	this.parseTMPL = '';
-	this.var = {};
-	this.varTMPL = {};
-	this.hooks = Array(); // [] => Array.prototype
-	this.debug = debug;
+export function Block(id, classes = [], debug = false){
+	var BLOCK_SCOPE = this;
+	/* create block if not exists */ 
+	if(document.querySelector(id) == null){ 
+		var element = document.createElement('DIV');
+		element.id = id.replace("#","");
+		element.className = classes.join(" ");
+		/* search for hidden attribute _appView */
+		BLOCK_SCOPE.ele_found = false;
+		document.querySelectorAll("*").toArray().forEach(function(ele, i){
+			if(ele.hasAttribute("_appView") && !BLOCK_SCOPE.ele_found){
+				BLOCK_SCOPE.selector = ele.appendChild(element);
+				BLOCK_SCOPE.ele_found = true;
+			}
+		});
+	} else {
+		BLOCK_SCOPE.selector = document.querySelector(id);
+	}
+	
+	BLOCK_SCOPE.template_selector = '';
+	BLOCK_SCOPE.is_template = false;
+	BLOCK_SCOPE.is_append = true;
+	BLOCK_SCOPE.templateHTML = '';
+	BLOCK_SCOPE.layout = BLOCK_SCOPE.selector.innerHTML;
+	BLOCK_SCOPE.parseHTML = '';
+	BLOCK_SCOPE.parseTMPL = '';
+	BLOCK_SCOPE.var = {};
+	BLOCK_SCOPE.varTMPL = {};
+	BLOCK_SCOPE.hooks = Array(); // [] => Array.prototype
+	BLOCK_SCOPE.debug = debug;
 	if(debug){
 		_l('Block debug mode : ON');
 		_l('If Template has been assigned then template related details will be displayed.');
@@ -20,18 +37,18 @@ export function Block(selector, debug = false){
 
 
 	/*Function.prototype.construct = function(selector, debug = false) {
-		this.selector = document.querySelector(selector);
-		this.layout = this.selector.innerHTML;
-		this.parseHTML = '';
-		this.var = {};
-		this.debug = debug;
+		BLOCK_SCOPE.selector = document.querySelector(selector);
+		BLOCK_SCOPE.layout = BLOCK_SCOPE.selector.innerHTML;
+		BLOCK_SCOPE.parseHTML = '';
+		BLOCK_SCOPE.var = {};
+		BLOCK_SCOPE.debug = debug;
 		if(debug){
 			_l('Block debug mode : ON');
 		}
 	};*/
 
 	Block.prototype.empty = function(){
-		this.selector.innerHTML = "";
+		BLOCK_SCOPE.selector.innerHTML = "";
 	}
 
 	Block.prototype.assign = function(key = '', val = ''){
@@ -49,7 +66,7 @@ export function Block(selector, debug = false){
 	Block.prototype.parse = function(buffer = false){
 		_parse(this);
 		if(buffer){
-			return (!this.is_template)?this.parseHTML:this.parseTMPL;
+			return (!BLOCK_SCOPE.is_template)?BLOCK_SCOPE.parseHTML:BLOCK_SCOPE.parseTMPL;
 		} else {
 			_render(this);
 		}
@@ -62,12 +79,12 @@ export function Block(selector, debug = false){
 		output += property + ': ' + this[property]+'; ';
 		}
 		_l(output);
-		if(this.is_template){
+		if(BLOCK_SCOPE.is_template){
 			_l('Template debug html :----------------------------------->');
-			_l(this.parse(true));
+			_l(BLOCK_SCOPE.parse(true));
 		} else {
 			_l('Block debug html :----------------------------------->');
-			_l(this.parse(true));
+			_l(BLOCK_SCOPE.parse(true));
 		}
 	}
 
@@ -77,7 +94,7 @@ export function Block(selector, debug = false){
 			_render(this, callbackFunc);
 			_clear(this);
 		} else {
-			return this.parse(true);
+			return BLOCK_SCOPE.parse(true);
 		}
 	}
 
@@ -91,20 +108,20 @@ export function Block(selector, debug = false){
 	
 	Block.prototype.append = function(val = Array(), callbackFunc = false, needToClear = true){
 		_set_position(this, 'append');
-		this.assignAll(val); 
+		BLOCK_SCOPE.assignAll(val); 
 		_parse(this); 
 		_render(this); 
 		if(needToClear) _clear(this); 
-		if(typeof callbackFunc === 'function') callbackFunc.apply({},[this.selector]);
+		if(typeof callbackFunc === 'function') callbackFunc.apply({},[BLOCK_SCOPE.selector]);
 	}
 
 	Block.prototype.prepend = function(val = Array(), callbackFunc = false, needToClear = true){
 		_set_position(this, 'prepend');
-		this.assignAll(val);
+		BLOCK_SCOPE.assignAll(val);
 		_parse(this);
 		_render(this);
 		if(needToClear) _clear(this);
-		if(typeof callbackFunc === 'function') callbackFunc.apply({},[this.selector]);
+		if(typeof callbackFunc === 'function') callbackFunc.apply({},[BLOCK_SCOPE.selector]);
 	}
 
 	Block.prototype.cycle = function(arr = Array(), callbackFunc = false){ 
@@ -113,7 +130,7 @@ export function Block(selector, debug = false){
 				var val = (typeof arr[key] !== "object")?JSON.parse(arr[key]):arr[key];
 				val["_key"] = key;
 				_call_hook(this, 'before-append-in-cycle', val);
-				this.append(val, false, false);
+				BLOCK_SCOPE.append(val, false, false);
 				for (var k in val) {
 					if (val.hasOwnProperty(k)) {
 						_clear(this, k);
@@ -123,7 +140,7 @@ export function Block(selector, debug = false){
 		}
 		_clear(this);
 		_call_hook(this, 'after-cycle-before-callback'); //middleware
-		if(typeof callbackFunc === 'function') callbackFunc.apply({},[this.selector]);
+		if(typeof callbackFunc === 'function') callbackFunc.apply({},[BLOCK_SCOPE.selector]);
 	}
 
 	Block.prototype.hook_reg = function(hookObj = {}){
@@ -223,11 +240,14 @@ function _render(instance, callbackFunc = false){
 	else { 
 		if(instance.is_append){
 			var html = instance.selector.innerHTML;
-			html += instance.parseTMPL;
+			html += instance.parseTMPL; 
+			//instance.selector.append(instance.parseTMPL);
 		} else {
 			var html = instance.parseTMPL;
-			html += instance.selector.innerHTML;
+			html += instance.selector.innerHTML; 
+			//instance.selector.prepend(instance.parseTMPL);
 		}
+		//_l(html);
 		instance.selector.innerHTML = html;
 	}
 	_call_hook(instance, 'after-render-before-callback'); //middleware

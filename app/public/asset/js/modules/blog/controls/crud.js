@@ -1,9 +1,9 @@
 /*blogControl Javascript File*/
 import {_l,_e,_w,_i} from '../../../lib/console';
-var instance = false;
+//var instance = false;
 export function CRUD(){
-	if(instance) return instance;
-	instance = this;
+	//if(instance) return instance;
+	//instance = this;
 
 	this.model = null;
 	/* property : Private */
@@ -26,21 +26,21 @@ export function CRUD(){
 		var SCOPE = this;
 
 		/* Load database */
-		SCOPE.model = new this._Data('form');
+		SCOPE.model = new SCOPE._Data('form');
 		var archives = SCOPE.model.getAll();
 		
 		/* blog from block object */
-		var blogFormBlock = new SCOPE._Block('#blogFormBlock');
-		var blogListBlock = new SCOPE._Block('#blogListBlock');
+		var blogFormBlock = new SCOPE._Block('#blogFormBlock', ['row']);
 
 		/* form block */
 		blogFormBlock.empty();
-		blogFormBlock.templateRaw(SCOPE._View['blog_form_template']);
+		blogFormBlock.templateRaw(SCOPE.views['blog_form_template']);
 		blogFormBlock.render();
 
 		/* list all posted blog from local storage */
+		var blogListBlock = new SCOPE._Block('#blogListBlock');
 		blogListBlock.empty();
-		blogListBlock.templateRaw(SCOPE._View['blog_list_template']); //'#_blank_blog_row_template'
+		blogListBlock.templateRaw(SCOPE.views['blog_list_template']); //'#_blank_blog_row_template'
 		
 		/* Register a hook in cycle */
 		blogListBlock.hook_reg({
@@ -61,7 +61,7 @@ export function CRUD(){
 				//var el = ev.target; 
 				if(ele.hasAttribute('_redirect')){
 					var route = ele.getAttribute('_redirect');
-					SCOPE._Route.goto(route); //, ele
+					State.goto(route); //, ele
 					//HashRoute.goto(route, ele);
 				}
 			});
@@ -70,7 +70,7 @@ export function CRUD(){
 				//var el = ev.target; 
 				if(ele.hasAttribute('_redirect')){
 					var route = ele.getAttribute('_redirect');
-					SCOPE._Route.goto(route); //, ele
+					State.goto(route); //, ele
 					//HashRoute.goto(route, ele);
 				}
 			});
@@ -96,7 +96,7 @@ export function CRUD(){
 			});
 			/* form block */
 			blogFormBlock.empty();
-			blogFormBlock.templateRaw(SCOPE._View['blog_form_template']);
+			blogFormBlock.templateRaw(SCOPE.views['blog_form_template']);
 			formValidation.block(blogFormBlock);
 			formValidation.setRules(['required']);
 			formValidation.setErrorMessages({
@@ -154,7 +154,7 @@ export function CRUD(){
 						formBlock.assign('form-alert-msg-class','alert-success');
 						formBlock.assign('form-alert-msg-display','show');
 						formBlock.render(false, function(){ 
-							blogListBlock.templateRaw(SCOPE._View['blog_list_template']); //'#_blank_blog_row_template'
+							blogListBlock.templateRaw(SCOPE.views['blog_list_template']); //'#_blank_blog_row_template'
 							blogListBlock.assign('edit_blog_btn','editBlogBtn'+LastSaveId);
 							blogListBlock.assign('edit_link','/blog/edit/'+LastSaveId);
 							blogListBlock.assign('delete_blog_btn','deleteBlogBtn'+LastSaveId);
@@ -167,7 +167,7 @@ export function CRUD(){
 									//var el = ev.target; 
 									if(ele.hasAttribute('_redirect')){
 										var route = ele.getAttribute('_redirect');
-										SCOPE._Route.goto(route); //, ele
+										State.goto(route); //, ele
 										//HashRoute.goto(route, ele);
 									}
 								});
@@ -176,7 +176,7 @@ export function CRUD(){
 									//var el = ev.target; 
 									if(ele.hasAttribute('_redirect')){
 										var route = ele.getAttribute('_redirect');
-										SCOPE._Route.goto(route); //, ele
+										State.goto(route); //, ele
 										//HashRoute.goto(route, ele);
 									}
 								});
@@ -228,7 +228,7 @@ export function CRUD(){
 		/* copy controller instance(SCOPE) */
 		var SCOPE = this;
 		//console.log(this.route);
-		SCOPE._Route.goto('/blogs');
+		State.goto('/blogs');
 	}
 }
 

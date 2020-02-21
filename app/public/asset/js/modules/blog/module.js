@@ -1,9 +1,10 @@
 /* Module.js */
 
 import {CRUD} from './controls/crud';
+import { _l } from '../../lib/console';
 
-var crud = new CRUD();
-/* Procedural moduler action */
+/* var crud = new CRUD();
+// Procedural moduler action 
 function crud_list(){
     crud.list();
 }
@@ -12,7 +13,7 @@ function crud_edit(){
 }
 function crud_delete(){
     crud.delete();
-}
+} */
 
 export function Blog(){
     this.controls = [CRUD];
@@ -20,6 +21,10 @@ export function Blog(){
     this.views = {
         'CRUD' : {
             'blog_form_template' : `
+        <div class="col-xs-12 col-md-6">
+	  		<h2> Blog Form</h2>
+	  		<!-- <form name="blog_form1" id="blogFormView1"></form> -->
+	  		<form name="blog_form2" id="blogFormBlockForm">
                 <div id="alert" class="alert (form-alert-msg-class) alert-dismissible fade (form-alert-msg-display)" role="alert">
                     (form-alert-msg)
                     <!-- <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -67,6 +72,11 @@ export function Blog(){
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+        </div>
+        <div class="col-xs-12 col-md-6" id="blogListBlock" style="overflow-y: scroll; border: 1px black dotted; height : 425px">
+			  
+		</div>
             `,
             'blog_list_template' : `
                 <div class="row">
@@ -89,17 +99,21 @@ export function Blog(){
     };
     this.routes = {
         '/blogs' : function(){ 
-            //_l("list : ");
-            crud_list();
+            //_l('-----------------------------------------');
+            //_l("STATE MODULES");
+            //_l(State.modules);
+            // Global call
+            State.modules.Blog.CRUD.list();
         },
         '/blog/edit/(:any)' : function(){ //el
             //alert("edit "+el.id);
-            crud_edit(); //el
+            // Local call
+            this.module.CRUD.edit();
         },
         '/blog/delete/(:any)' : function(){ //el
             //alert("delete "+el.id);
-            crud_delete(); //el
-            //URLRoute.goto('/');
+            //State.goto('/');
+            this.module.CRUD.delete();
         }
     };
 }

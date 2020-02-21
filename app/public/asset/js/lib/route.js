@@ -12,6 +12,7 @@ URLRoute.goto('/url1',arguments ...);
 
 import {_l,_e,_w,_i} from './console';
 import {Helper} from './helper';
+import { el } from './element';
 
 var listen = false;
 var instance = false;
@@ -24,6 +25,7 @@ export function Route(type, debug = false){
 	this.hashes = [];
 	this.hashCallBacks = {};
 	this.type = 'url';
+	this.modules = {};
 	this.state = false;
 	this.uri = location.pathname.replace(/\/+$/,"");
 	this.debug = debug;
@@ -39,7 +41,7 @@ export function Route(type, debug = false){
 		// parse route for callback
 		var match = this.parse(path);
 		if(this.debug) _l("match : "+match);
-		
+		//_l("match found : "+match);
 		/* If match found ! */
 		if(match){
 			var state = this.currentState();
@@ -75,8 +77,9 @@ export function Route(type, debug = false){
 			  		alert("Your browser does not support history.pushState ! Can not run callback.");
 				    window.location.assign(url);
 			  	}
-	  		} else {
-	  			window.location.hash = '';
+	  		} else { 
+				window.location.hash = '#';
+	  			window.location.hash = '#/';
 	  		}
 		}
 		this.listenState();
@@ -116,7 +119,7 @@ export function Route(type, debug = false){
 		else if(this.type == 'hash' && this.hashes.indexOf(val) === -1) this.hashes.push(val);
 	}
 
-	Route.prototype.when = function(val, callBack, title=""){
+	Route.prototype.when = function(val, callBack, title="", resources = {}){
 		this.push(val);	
 		val = (val.length == 1)?val:Helper.rtrim(val,'/').replace("?","");
 		if(this.type == 'url'){
@@ -131,9 +134,14 @@ export function Route(type, debug = false){
 				type : 'hash',
 				title : (title != "")?title:val,
 				callBack : callBack,
+				resources : resources,
 				hash : val
 			};
 		}
+	}
+
+	Route.prototype.module = function(module, resource){
+		this.modules[module] = resource;
 	}
 
 	Route.prototype.parse = function(val){ //_l(val);
@@ -195,7 +203,7 @@ export function Route(type, debug = false){
 function runCallBack(){ //_l('here');
 	var args = Helper.collection(arguments);
 	var val = args[0];
-	var route = URLRoute; //new Route('hash', true);
+	var route = State; //new Route('hash', true);
 	// parse route for callback
 	var match = route.parse(val);
 	if(route.debug) _l("match : "+match);
@@ -205,6 +213,7 @@ function runCallBack(){ //_l('here');
 		if(route.debug) _l(state);
 		if(typeof state !== "undefined"){
 			//document.title = state.title;
+			var module = state.resources;
 			if(route.type == 'url'){
 				var url = route.uri+state.slug;
 				if(route.debug) _l(url);
@@ -213,17 +222,17 @@ function runCallBack(){ //_l('here');
 					//saveState.callBack = window.btoa(saveState.callBack); // encode
 					//saveState
 					//window.history.pushState({}, state.title, url);
-					state.callBack.apply({},args.slice(1));
-				  } else {
+					state.callBack.apply({module},args.slice(1));
+				} else {
 					  //alert("Your browser does not support history.pushState ! Can not run callback.");
 					//window.location.assign(url);
-				  }
-			  } else {
+				}
+			} else {
 				  //window.location.hash = state.hash;
-				  state.callBack.apply({},args.slice(1));
-			  }
-		  } else throw new Error("Route is stateless !");
-	  } else {
+				  state.callBack.apply({module},args.slice(1));
+			}
+		} else throw new Error("Route is stateless !");
+	} else {
 		  /* default route to landing page */
 		  if(route.type == 'url'){
 			  var url = route.uri+'/';
@@ -236,8 +245,9 @@ function runCallBack(){ //_l('here');
 			  }
 		  } else {
 			  //window.location.hash = '';
+			  //el('.container-fluid').find('.error404').get().className.replace(/\bd-none\b/g, "");
 		  }
-	  }
+	}
 }
 
 /* Abstruction */
@@ -264,11 +274,11 @@ function _parse(instance, val){
 		}
 	} else {
 		if(instance.debug) _l(instance.hashCallBacks);
-		val = val.replace("#","");
+		val = val.replace("#",""); _l('--------------------'); _l(val);
 		for (var key in instance.hashCallBacks) {
 			// Convert wildcards to RegEx
 			var regex_key = key.replace(/\//g, '\\\/').replace(':any', '[^/]+').replace(':num', '[0-9]+');
-			//_l(key);
+			//_l(val);
 			//_l('/^'+regex_key+'$/');
 			// check regex and find match
 			var routeReg = new RegExp(`^${regex_key}$`,'gi'); 

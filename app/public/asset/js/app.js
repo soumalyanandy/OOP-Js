@@ -2,6 +2,8 @@
 
 /* include libraries */
 import {_l,_e,_w,_i} from './lib/console';
+
+/* Variable CSS */
 import {vCSS} from './lib/vcss';
 
 /* Element JS */
@@ -11,8 +13,12 @@ import {el} from './lib/element';
 import {Blog} from './modules/blog/module';
 
 el("window").on("load", [Blog], function(ev, doc, modules){ 
-  _l(modules['Blog']);
+  //_l(modules['Blog']);
   _l("window load");
+
+  State.when('/', function(){
+    State.modules.Blog.CRUD.list();
+  });
 
   /* variable css */
   var vcss=new vCSS(`
