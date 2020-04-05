@@ -6,7 +6,7 @@ export function Data(model, debug = false){
         this.model = model;
         this.PostData = {};
         this.SaveData = {};
-        //this.unique_id = _genUniqueId();
+        this.unique_id = null; //_genUniqueId();
         this.debug = debug;
         if(debug){
             _l('Data debug mode : ON');
@@ -22,6 +22,10 @@ Data.prototype.data = function(data){
 
 Data.prototype.save = function(){
     return _save(this);
+}
+
+Data.prototype.delete = function(){
+    return _delete(this);
 }
 
 Data.prototype.get = function(id){ 
@@ -51,7 +55,7 @@ function _data(instance, dataObj){
 }
 
 function _save(instance){
-    var id = _genUniqueId();
+    var id = (instance.unique_id != null)?instance.unique_id:_genUniqueId();
     try{
         localStorage.setItem(instance.model+id, JSON.stringify(instance.PostData));
     } catch(err){
@@ -59,6 +63,17 @@ function _save(instance){
         return false;
     }
     return instance.model+id;
+}
+
+function _delete(instance){ _l('delete id : '+instance.unique_id);
+    if(instance.unique_id != null){
+        try{
+            localStorage.removeItem(instance.model+instance.unique_id);
+        } catch(err){
+            _e(err); 
+            return false;
+        }
+    }
 }
 
 function _get(instance, id){

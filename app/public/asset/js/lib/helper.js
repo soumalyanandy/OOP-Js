@@ -25,6 +25,13 @@ function collection(arrayLikeObject = new Object()){
 }
 
 /* val.replace(/^\/+/,"").replace(/\/+$/,"") */
+
+function trim(str, char){
+  var LtrimReg = new RegExp(`^\\${char}+`);
+  var RtrimReg = new RegExp(`\\${char}+$`);
+  return str.replace(LtrimReg,'').replace(RtrimReg,'');
+}
+
 function ltrim(str, char){ 
 	var trimReg = new RegExp(`^\\${char}+`);
 	return  str.replace(trimReg,'');
@@ -39,10 +46,48 @@ function timestamp(){
   return new Date().getTime();
 }
 
+function objectHasUserDefinedPrototype(obj){
+  if(Object.getPrototypeOf){
+      return Object.getPrototypeOf(obj) !== Object.prototype;
+  } else {
+      return obj.constructor !== Object;
+  }
+}
+
+
 function Exporter() {
-	this.collection = collection;
+  this.collection = collection;
+  this.trim = trim;
 	this.ltrim = ltrim;
   this.rtrim = rtrim;
   this.timestamp = timestamp;
 };
 export var Helper = new Exporter();
+
+
+/*
+References:
+
+function is_object(mixed_var) {
+    if (mixed_var instanceof Array) {
+        return false;
+    } else {
+        return (mixed_var !== null) && (typeof( mixed_var ) == 'object');
+    }
+}
+
+function objectToArray(obj) {
+    var array = [], tempObject;
+    for (var key in obj) {
+
+        tempObject = obj[key];
+
+        if (is_object(obj[key])) {
+            tempObject = objectToArray(obj[key]);
+        }
+        array[key] = tempObject;
+    }
+    return array;
+}
+
+*/

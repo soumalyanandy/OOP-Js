@@ -13,6 +13,11 @@ URLRoute.goto('/url1',arguments ...);
 import {_l,_e,_w,_i} from './console';
 import {Helper} from './helper';
 import { el } from './element';
+import {Hook} from './hook';
+import {Module} from './module';
+import {Cookie} from './cookie';
+import {File} from './file';
+import {notFound} from '../modules/notFound/module'; 
 
 var listen = false;
 var instance = false;
@@ -28,6 +33,7 @@ export function Route(type, debug = false){
 	this.modules = {};
 	this.state = false;
 	this.uri = location.pathname.replace(/\/+$/,"");
+	this.slugChange = 0;
 	this.debug = debug;
 
 	if(this.types.indexOf(type.toLowerCase()) !== -1){
@@ -36,12 +42,13 @@ export function Route(type, debug = false){
 
 	/* properties */
 	Route.prototype.listen = function(){
-		var path = location.pathname;
-		_l(path);
+		var path = window.location.hash; //document.URL;
+		_l('path : '+window.location.hash);
+		if(this.debug) _l(path);
 		// parse route for callback
 		var match = this.parse(path);
 		if(this.debug) _l("match : "+match);
-		//_l("match found : "+match);
+		_l("match found : "+match);
 		/* If match found ! */
 		if(match){
 			var state = this.currentState();
@@ -62,15 +69,16 @@ export function Route(type, debug = false){
 					    window.location.assign(url);
 				  	}
 			  	} else {
-			  		window.location.hash = state.hash;
-			  		//state.callBack.apply({},args.slice(1));
+			  		//window.location.hash = state.hash;
+					//state.callBack.apply({},args.slice(1));
+					_runCallBack(window.location.hash);
 			  	}
 		  	} else throw new Error("Route is stateless !");
 	  	} else {
 	  		/* default route to landing page */
 	  		if(this.type == 'url'){
 	  			var url = this.uri+'/';
-	  			_l(url);
+	  			if(this.debug) _l(url);
 	  			if ("undefined" !== typeof window.history.pushState) {
 				    window.history.pushState({}, '', url); 
 			  	} else {
@@ -78,9 +86,9 @@ export function Route(type, debug = false){
 				    window.location.assign(url);
 			  	}
 	  		} else { 
-				window.location.hash = '#';
+				//window.location.hash = '#';
 	  			window.location.hash = '#/';
-	  		}
+			}
 		}
 		this.listenState();
 	}
@@ -90,10 +98,10 @@ export function Route(type, debug = false){
 			listen = true;
 			if(this.type == 'url'){ 
 				window.addEventListener("popstate", function(e){
-					_l("listen to url");
+					if(this.debug) _l("listen to url");
 				    if(e.state){
 				    	//this.state = e.state;
-				    	_l(e.state);
+				    	if(this.debug) _l(e.state);
 				    	//var callback = JSON.parse(e.state.callBack);
 				    	//callback.apply({},[]);
 				        //document.getElementById("content").innerHTML = e.state.html;
@@ -105,8 +113,14 @@ export function Route(type, debug = false){
 			} else {
 				window.addEventListener("hashchange", function(e){
 					_l("listen to hash");
-					console.log("#changed", window.location.hash);
-					runCallBack(window.location.hash);
+					_l("# changed to : "+window.location.hash);
+					
+					//Cookie.set('hash', window.location.hash);
+					/* remove all event listener */
+					/*el("", null, 'removeAllListener', function(){
+						_runCallBack(window.location.hash);
+					});*/
+					_runCallBack(window.location.hash);
 				});
 				/*window.onhashchange = function () {
 				}*/
@@ -140,8 +154,12 @@ export function Route(type, debug = false){
 		}
 	}
 
-	Route.prototype.module = function(module, resource){
-		this.modules[module] = resource;
+	Route.prototype.segments = function(){
+		var p = [], slug = window.location.hash;
+		slug = Helper.ltrim(slug,'#/');
+		p[0] = slug;
+		p[1] = slug.split('/');
+		return p;
 	}
 
 	Route.prototype.parse = function(val){ //_l(val);
@@ -149,6 +167,15 @@ export function Route(type, debug = false){
 	}
 
 	Route.prototype.goto= function(){ 
+		/* before redirect hook */
+		_call_hook(this, 'before-redirect');
+
+		/* before redirect remove all event listener */
+		//el("", null, 'removeAllListener'); return false;
+
+		/* loader */
+		State.appViewIsEmpty(false,`<div id="main"><div class="loader"></div></div>`);
+
 		var args = Helper.collection(arguments);
 		var val = args[0];
 		// parse route for callback
@@ -182,7 +209,7 @@ export function Route(type, debug = false){
 	  		/* default route to landing page */
 	  		if(this.type == 'url'){
 	  			var url = this.uri+'/';
-	  			_l(url);
+	  			if(this.debug) _l(url);
 	  			if ("undefined" !== typeof window.history.pushState) {
 				    window.history.pushState({}, '', url); 
 			  	} else {
@@ -195,18 +222,91 @@ export function Route(type, debug = false){
 	  	}
 	}
 
+	Route.prototype.hook_reg = function(hookObj = {}){
+		_hooks(this, hookObj);
+	}
+
 	Route.prototype.currentState = function(){
 		return this.state;
 	}	
+
+	Route.prototype.slugChangeCount = function(){
+		return this.slugChange;
+	} 
+
+	/* --: MODULE Global Functions : -- */
+	Route.prototype.module = function(module, resource){
+		this.modules[module] = resource;
+	}
+
+	Route.prototype.call_module_action = function(action, param = []){
+		var param_collection = Helper.collection(param);
+		var p = this.segments();
+		if(param_collection != null){
+			param_collection.forEach(function(val, key){
+				p.push(val);
+			});
+		}
+		var mod_info = action.split('.');
+		var control = this.modules[mod_info[0]][mod_info[1]];
+		control[mod_info[2]].apply(control, p);
+	}
+
+	/* --: BLOCK Global Functions : -- */
+	Route.prototype.appViewIsEmpty = function(isEmpty = false, html = ''){
+		/* search for hidden attribute _appView */
+		document.querySelectorAll("*").toArray().forEach(function(ele, i){
+			if(ele.hasAttribute("_appView")){
+				if(isEmpty) ele.innerHTML = '';
+				else if(!isEmpty && html != '') ele.innerHTML = html;
+				return ele.innerHTML;
+			}
+		});
+		return '';
+	}
+
+	/* --: FILE Global Functions : -- */
+	Route.prototype.addFile = function(src, type){
+        File.add(src, type);
+	}
+
+	Route.prototype.filePutInHTML = function(sec){
+		File.putInHTML(sec);
+		/* Load File Resources */
+		File.load();
+	}
 }
 
-function runCallBack(){ //_l('here');
-	var args = Helper.collection(arguments);
-	var val = args[0];
+/* Abstruction */
+//var hook_instance = false;
+function _hooks(instance, hook = {}){
+	//if(!hook_instance) hook_instance = new Hook(true);
+	Hook.register("ROUTE", hook);
+}
+
+function _call_hook(instance, key, val = ''){
+	//if(!hook_instance) hook_instance = new Hook(true);
+	return Hook.call("ROUTE", key, val);
+}
+
+function _runCallBack(slug){ //_l('here');
+	//var args = Helper.collection(arguments);
+	//var slug= window.location.hash;
 	var route = State; //new Route('hash', true);
+	route.slugChange +=1;
+	/* action arguments */
+	var args = route.segments();
+	
+	/* before redirect remove all event listener */
+	//el("", null, 'removeAllListener'); 
+
+	/* Make the app view empty */
+	State.appViewIsEmpty(true);
+
 	// parse route for callback
-	var match = route.parse(val);
+	var match = route.parse(slug);
 	if(route.debug) _l("match : "+match);
+
 	/* If match found ! */
 	if(match){
 		var state = route.currentState();
@@ -214,6 +314,7 @@ function runCallBack(){ //_l('here');
 		if(typeof state !== "undefined"){
 			//document.title = state.title;
 			var module = state.resources;
+
 			if(route.type == 'url'){
 				var url = route.uri+state.slug;
 				if(route.debug) _l(url);
@@ -222,36 +323,48 @@ function runCallBack(){ //_l('here');
 					//saveState.callBack = window.btoa(saveState.callBack); // encode
 					//saveState
 					//window.history.pushState({}, state.title, url);
-					state.callBack.apply({module},args.slice(1));
+					state.callBack.apply({module}, args);
 				} else {
 					  //alert("Your browser does not support history.pushState ! Can not run callback.");
 					//window.location.assign(url);
 				}
 			} else {
 				  //window.location.hash = state.hash;
-				  state.callBack.apply({module},args.slice(1));
+				  state.callBack.apply({module},args);
 			}
 		} else throw new Error("Route is stateless !");
 	} else {
-		  /* default route to landing page */
-		  if(route.type == 'url'){
-			  var url = route.uri+'/';
-			  //_l(url);
-			  if ("undefined" !== typeof window.history.pushState) {
+		/* default route to landing page */
+		if(route.type == 'url'){
+			var url = route.uri+'/';
+			//_l(url);
+			if ("undefined" !== typeof window.history.pushState) {
 				//window.history.pushState({}, '', url); 
-			  } else {
-				  alert("Your browser does not support history.pushState ! Can not run callback.");
+			} else {
+				alert("Your browser does not support history.pushState ! Can not run callback.");
 				//window.location.assign(url);
-			  }
-		  } else {
-			  //window.location.hash = '';
-			  //el('.container-fluid').find('.error404').get().className.replace(/\bd-none\b/g, "");
-		  }
+			}
+		} else {
+			//window.location.hash = '';
+			var module = new Module();
+			module.load([notFound]);
+			var NotFoundModule = module.get('notFound');
+			if(NotFoundModule){
+				NotFoundModule.notFoundControl.show();
+			} else {
+				State.appViewIsEmpty(false,`
+					<div style="padding : 5px; margin : 5px;">
+						<div style="width : 100%; heigth : auto; border : 1px dotted black;">
+							<h1 style="font-family : sarif; font-weight : bold; font-size : 40px; text-align:center;">404 Not Found</h1>
+						</div>
+					</div>	
+				`);
+			}
+		}
 	}
 }
 
-/* Abstruction */
-function _parse(instance, val){
+function _parse(instance, val){ //_l('parse hash : '+val);
 	/* for each callback reference */
 	if(instance.type == 'url'){
 		if(instance.debug) _l(instance.urlCallBacks);
@@ -274,7 +387,7 @@ function _parse(instance, val){
 		}
 	} else {
 		if(instance.debug) _l(instance.hashCallBacks);
-		val = val.replace("#",""); _l('--------------------'); _l(val);
+		val = val.replace("#","");
 		for (var key in instance.hashCallBacks) {
 			// Convert wildcards to RegEx
 			var regex_key = key.replace(/\//g, '\\\/').replace(':any', '[^/]+').replace(':num', '[0-9]+');
@@ -284,6 +397,7 @@ function _parse(instance, val){
 			var routeReg = new RegExp(`^${regex_key}$`,'gi'); 
 			//_l(routeReg);
 			var matched = val.match(routeReg);
+			//_l('matched : '+matched);
 			if(instance.debug) _l(matched);
 			if(matched != null){
 				//return key;//val.match(key);

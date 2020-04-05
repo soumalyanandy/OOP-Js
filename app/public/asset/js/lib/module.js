@@ -6,6 +6,8 @@ import {Block} from './block';
 import {Validation} from './validation';
 import {Data} from './data';
 import {el} from './element';
+import {File} from './file';
+import {Hook} from './hook';
 
 var instance = false;
 export function Module(){
@@ -14,9 +16,10 @@ export function Module(){
     this.resources = {};
 
 
-    Module.prototype.load = function(modules = []){
-        if(!modules instanceof Array) throw new Error("Module load function must call with array value.");
+    Module.prototype.load = function(modules = []){ 
+        if(typeof modules === 'function') throw new Error("Module load function must call with array value.");
         var MODULE_SCOPE = this;
+        
         (modules).forEach(function(module, i){
             _l(module.name);
             // module object
@@ -30,15 +33,23 @@ export function Module(){
                 // module resources
                 MODULE_SCOPE.resources[module.name][control.name].routes= MODULE_SCOPE.resources[module.name].routes;
                 MODULE_SCOPE.resources[module.name][control.name].models = MODULE_SCOPE.resources[module.name].models;
+                MODULE_SCOPE.resources[module.name][control.name].hooks = MODULE_SCOPE.resources[module.name].hooks;
                 MODULE_SCOPE.resources[module.name][control.name].views = MODULE_SCOPE.resources[module.name].views[control.name];
 
                 // framework resources
                 MODULE_SCOPE.resources[module.name][control.name]._Data = Data;
                 MODULE_SCOPE.resources[module.name][control.name]._Block = Block;
+                MODULE_SCOPE.resources[module.name][control.name]._File = File;
+                MODULE_SCOPE.resources[module.name][control.name]._Hook = Hook;
                 MODULE_SCOPE.resources[module.name][control.name]._Module = Module;
                 MODULE_SCOPE.resources[module.name][control.name]._Validation = Validation;
                 MODULE_SCOPE.resources[module.name][control.name]._el = el;
                 //resources.push(resource);
+
+                // register hooks if exists
+                MODULE_SCOPE.resources[module.name].hooks.forEach(function(hook, i){
+                    Hook.register(module.name+"."+control.name, hook);
+                });
             });
             
             // add routes to State
@@ -52,6 +63,7 @@ export function Module(){
     }
 
     Module.prototype.get = function(name = null){
-        return typeof this.resources[name] !== "undefined"?this.resources[name]:this.resources;
+        if(name != null && typeof this.resources[name] === "undefined") return false;
+        return name != null && typeof this.resources[name] !== "undefined"?this.resources[name]:this.resources;
     }
 }

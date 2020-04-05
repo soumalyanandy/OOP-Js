@@ -10,38 +10,38 @@ export function Validation(selector, debug = false){
 		_l('Validation debug mode : ON');
 	}
 
-
-Validation.prototype.formData = function(dataObj = {}){
-	_setFromData(this, dataObj);
-}
-
-Validation.prototype.getFormData = function(callbackFunc = false){
-	_getFormData(this, callbackFunc);
-}
-
-Validation.prototype.block = function(blockObj = {}){
-	_setFormBlock(this,blockObj);
-}
-
-Validation.prototype.run = function(callbackFunc = false){
-	_validate(this, callbackFunc);
-}
-
-Validation.prototype.setRules = function(ruleArr = Array()){
-	_setRules(this, ruleArr);
-}
-
-Validation.prototype.setErrorMessages = function(errorMsgObj = {}){
-	_errorMessages(this, errorMsgObj);
-}
-
-Validation.prototype.dump = function(){
-	_l('Validation debug object :------------------------------------->');
-	var output = '';
-	for (var property in this) {
-	  output += property + ': ' + this[property]+'; ';
+	Validation.prototype.formData = function(dataObj = {}){
+		_setFromData(this, dataObj);
 	}
-	_l(output);
+
+	Validation.prototype.getFormData = function(callbackFunc = false){
+		_getFormData(this, callbackFunc);
+	}
+
+	Validation.prototype.block = function(blockObj = {}){
+		_setFormBlock(this,blockObj);
+	}
+
+	Validation.prototype.run = function(callbackFunc = false){
+		_validate(this, callbackFunc);
+	}
+
+	Validation.prototype.setRules = function(ruleArr = Array()){
+		_setRules(this, ruleArr);
+	}
+
+	Validation.prototype.setErrorMessages = function(errorMsgObj = {}){
+		_errorMessages(this, errorMsgObj);
+	}
+
+	Validation.prototype.dump = function(){
+		_l('Validation debug object :------------------------------------->');
+		var output = '';
+		for (var property in this) {
+		output += property + ': ' + this[property]+'; ';
+		}
+		_l(output);
+	}
 }
 
 /* Abstruction */
@@ -101,6 +101,4 @@ function _validate(obj, callbackFunc = false){
 		}
 	}
 	if(typeof callbackFunc === 'function') callbackFunc.apply({}, [obj.validation_error, obj.block, obj.formSubmitData, obj.selector]);
-}
-
 }

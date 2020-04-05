@@ -19,3 +19,8 @@ export function _dd(exp){
 	eval(exp);
 	return false;
 }
+
+export function _exit(val){
+    console.log(val);
+    return false;
+}

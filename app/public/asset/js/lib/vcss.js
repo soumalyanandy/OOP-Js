@@ -91,7 +91,11 @@ function _convert(obj){
 
 function _exe_var(obj){
 	if(obj.debug) console.log(obj.target_prop);
-	var get_pos_var_start = obj.target_prop.indexOf(obj.start_deli);
+	if(typeof obj.target_prop !== "function"){
+		var get_pos_var_start = obj.target_prop.indexOf(obj.start_deli);
+	} else {
+		get_pos_var_start = -1;
+	}
 	if(obj.debug) console.log(get_pos_var_start);
 	if(get_pos_var_start != -1){
 		var get_var_str = obj.target_prop.substring(get_pos_var_start);

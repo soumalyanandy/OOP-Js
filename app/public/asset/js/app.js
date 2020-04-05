@@ -16,9 +16,7 @@ el("window").on("load", [Blog], function(ev, doc, modules){
   //_l(modules['Blog']);
   _l("window load");
 
-  State.when('/', function(){
-    State.modules.Blog.CRUD.list();
-  });
+  
 
   /* variable css */
   var vcss=new vCSS(`
