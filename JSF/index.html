@@ -38,9 +38,21 @@
 	</style>
 </head>
 <body>
-	<div class="container-fluid">
-		<div _appView ></div>
-	</div>
-	<script type="text/javascript" src="dist/main.js"></script>
+	<script type="text/javascript">
+		(function (d, t, g) {
+			var bootstrap    = d.createElement(t), s = d.getElementsByTagName(t)[0];
+			bootstrap.type   = 'text/javascript';
+			bootstrap.async   = false;
+			bootstrap.charset = 'UTF-8';
+			bootstrap.src     = g + '?' + (new Date()).getTime();
+			d.body.appendChild(bootstrap);
+		})(document, 'script', 'dist/main.js');
+		(function (d, t) {
+			var view    = d.createElement(t), s = d.getElementsByTagName(t)[0];
+			view.class   = 'container-fluid';
+			view.innerHTML = '<div _appView ></div>';
+			d.body.appendChild(view);
+		})(document, 'div');
+	</script>
 </body>
 </html>

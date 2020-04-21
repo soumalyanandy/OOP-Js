@@ -49,8 +49,8 @@ function _genUniqueId(){
 
 function _data(instance, dataObj){
     for(var key in dataObj){
-		if(instance.debug) _l('form data pair : '+key+' => '+dataObj[key].trim());
-		instance.PostData[key] = dataObj[key].trim();
+        if(instance.debug) _l('form data pair : '+key+' => '+dataObj[key].trim());
+		if(typeof dataObj[key] !== 'function') instance.PostData[key] = dataObj[key].trim();
 	}
 }
 

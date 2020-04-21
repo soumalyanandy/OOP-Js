@@ -8,18 +8,19 @@ function file(debug = false){
     this.loaded = [];
 
     file.prototype.add = function(src, type = null){ 
-        if(this.debug) _l("File add from : "+src);
         if(type == null) throw new Error("Please provide file type");
         if(!this.paths.hasItem(src)){
             this.paths.push({
                 src : src,
                 type : type
             });
+            if(this.debug) _l("File add from : "+src);
         }
     }
 
     file.prototype.addIMG = function(src_arr = [], seclector = 'body'){
         var FILE_SCOPE = this;
+        var time = new Date().getTime();
         (function(){ 
 			src_arr.forEach(function(src) {
                 if(!FILE_SCOPE.loaded.hasItem(src)){
@@ -29,6 +30,7 @@ function file(debug = false){
                     image.src = src;
                     image.async = false;
                     image.alt = src;
+                    image.id = 'f_'+time;
                     seclector.parentNode.insertBefore(image, seclector);
                 }
 			});
@@ -38,6 +40,7 @@ function file(debug = false){
     file.prototype.addJS = function(src_arr = []){
         var FILE_SCOPE = this;
         var url = ""; //location.protocol+"//"+location.hostname+location.pathname;
+        var time = new Date().getTime();
         (function(){ 
 			src_arr.forEach(function(src) {
                 if(!FILE_SCOPE.loaded.hasItem(src)){
@@ -46,7 +49,9 @@ function file(debug = false){
                     var script = document.createElement('script');
                     script.src = url+src;
                     script.async = false;
-                    document.head.appendChild(script);
+                    script.type = 'text/javascript';
+                    script.id = 'f_'+time;
+                    document.querySelector("head").appendChild(script);
                 }
 			});
 		})();
@@ -55,6 +60,7 @@ function file(debug = false){
     file.prototype.addCSS = function(src_arr = []){
         var FILE_SCOPE = this;
         var url = ""; //location.protocol+"//"+location.hostname+location.pathname;
+        var time = new Date().getTime();
         (function(){ 
 			src_arr.forEach(function(src) {
                 if(!FILE_SCOPE.loaded.hasItem(src)){
@@ -63,9 +69,10 @@ function file(debug = false){
                     var link = document.createElement('link');
                     link.href = url+src;
                     link.rel = 'stylesheet';
-                    link.type= 'text/css';
+                    link.type = 'text/css';
+                    link.id = 'f_'+time;
                     //link.media = "screen,print";
-                    document.head.appendChild(link);
+                    document.querySelector("head").appendChild(link);
                 }
 			});
 		})();
@@ -87,6 +94,7 @@ function file(debug = false){
         if(this.debug) _l(this.paths.print());
         var FILE_SCOPE = this;
         var url = "";//location.protocol+"//"+location.hostname+location.pathname;
+        var time = new Date().getTime();
         this.paths.forEach(function(obj, i){
             if(this.debug) _l("path : "+url+obj.src);
             if(!FILE_SCOPE.loaded.hasItem(obj.src)){
@@ -97,26 +105,40 @@ function file(debug = false){
                         resource.src = url+obj.src;
                         resource.async = false;
                         resource.type = 'text/javascript';
+                        resource.id = 'f_'+time;
                     break;
                     case "CSS":
                         resource = document.createElement('link');
                         resource.href = url+obj.src;
                         resource.rel = 'stylesheet';
                         resource.type= 'text/css';
+                        resource.id = 'f_'+time;
                         //resource.media = "screen,print";
                     break;
                 }
                 switch(FILE_SCOPE.section.toUpperCase()){
                     case "HEAD" : 
                         if(this.debug) _l("append to head");
-                        document.head.appendChild(resource);
+                        document.querySelector("head").appendChild(resource);
                     break;
                     case "BODY" : 
                         if(this.debug) _l("append to body");
-                        document.body.appendChild(resource);
+                        document.querySelector("body").appendChild(resource);
                     break;
                 }
             }
+        });
+    }
+
+    file.prototype.unload = function(){
+        var FILE_SCOPE = this;
+        document.querySelectorAll("[id^=f_]").toArray().forEach(function(ele, key){
+            var src = ele.getAttribute("type") == "text/css"?ele.getAttribute("href"):ele.getAttribute("src");
+            if(FILE_SCOPE.loaded.hasItem(src)){
+                FILE_SCOPE.loaded.removeItem(src);
+                if(FILE_SCOPE.debug) _l("File : "+src+" has been removed from html.");
+            }
+            ele.remove();
         });
     }
 

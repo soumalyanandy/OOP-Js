@@ -21,7 +21,7 @@ import {notFound} from '../modules/notFound/module';
 
 var listen = false;
 var instance = false;
-export function Route(type, debug = false){
+export function Route(type = 'url', debug = false){
 	if(instance) return instance;
 	instance = this;
 	this.types = ['hash', 'url'];
@@ -29,21 +29,25 @@ export function Route(type, debug = false){
 	this.urlCallBacks = {};
 	this.hashes = [];
 	this.hashCallBacks = {};
-	this.type = 'url';
+	this.type = type;
 	this.modules = {};
 	this.state = false;
-	this.uri = location.pathname.replace(/\/+$/,"");
+	/* address info */
+	this.uri = (this.type == 'url')?location.pathname.replace(/\/+$/,""):window.location.hash;
+	this.site_url = location.protocol+"//"+location.hostname+location.pathname+'#/';
+	this.current_url = (document.URL)?document.URL:location.protocol+"//"+location.hostname+location.pathname+window.location.hash;
+	this.protocol = location.protocol;
+	this.hostname = location.hostname;
+	this.pathname = location.pathname;
+
 	this.slugChange = 0;
 	this.debug = debug;
 
-	if(this.types.indexOf(type.toLowerCase()) !== -1){
-		this.type = type;
-	}
-
 	/* properties */
 	Route.prototype.listen = function(){
-		var path = window.location.hash; //document.URL;
-		_l('path : '+window.location.hash);
+		this.detectCurrentUrl();
+		var path = this.uri; 
+		_l('path : '+path);
 		if(this.debug) _l(path);
 		// parse route for callback
 		var match = this.parse(path);
@@ -71,7 +75,7 @@ export function Route(type, debug = false){
 			  	} else {
 			  		//window.location.hash = state.hash;
 					//state.callBack.apply({},args.slice(1));
-					_runCallBack(window.location.hash);
+					_runMainCallBack(window.location.hash);
 			  	}
 		  	} else throw new Error("Route is stateless !");
 	  	} else {
@@ -118,14 +122,22 @@ export function Route(type, debug = false){
 					//Cookie.set('hash', window.location.hash);
 					/* remove all event listener */
 					/*el("", null, 'removeAllListener', function(){
-						_runCallBack(window.location.hash);
+						_runMainCallBack(window.location.hash);
 					});*/
-					_runCallBack(window.location.hash);
+					_runMainCallBack(window.location.hash);
 				});
 				/*window.onhashchange = function () {
 				}*/
 			}
 		}
+	}
+
+	Route.prototype.detectSiteUrl = function(){
+		this.site_url = location.protocol+"//"+location.hostname+location.pathname+'#/';
+	}
+
+	Route.prototype.detectCurrentUrl = function(){
+
 	}
 
 	Route.prototype.push = function(val){
@@ -171,9 +183,12 @@ export function Route(type, debug = false){
 		_call_hook(this, 'before-redirect');
 
 		/* before redirect remove all event listener */
-		//el("", null, 'removeAllListener'); return false;
+		State.removeAllListners();
 
-		/* loader */
+		/* file unload */
+		State.fileUnload();
+
+		/* loader in the app view */
 		State.appViewIsEmpty(false,`<div id="main"><div class="loader"></div></div>`);
 
 		var args = Helper.collection(arguments);
@@ -201,6 +216,7 @@ export function Route(type, debug = false){
 					    window.location.assign(url);
 				  	}
 			  	} else {
+					window.location.hash = '#/';
 			  		window.location.hash = state.hash;
 			  		//state.callBack.apply({},args.slice(1));
 			  	}
@@ -255,13 +271,12 @@ export function Route(type, debug = false){
 	/* --: BLOCK Global Functions : -- */
 	Route.prototype.appViewIsEmpty = function(isEmpty = false, html = ''){
 		/* search for hidden attribute _appView */
-		document.querySelectorAll("*").toArray().forEach(function(ele, i){
-			if(ele.hasAttribute("_appView")){
-				if(isEmpty) ele.innerHTML = '';
-				else if(!isEmpty && html != '') ele.innerHTML = html;
-				return ele.innerHTML;
-			}
-		});
+		var ele = document.querySelector("DIV[_appView]");
+		if(ele){
+			if(isEmpty) ele.innerHTML = '';
+			else if(!isEmpty && html != '') ele.innerHTML = html;
+			return ele.innerHTML;
+		} 
 		return '';
 	}
 
@@ -274,6 +289,15 @@ export function Route(type, debug = false){
 		File.putInHTML(sec);
 		/* Load File Resources */
 		File.load();
+	}
+
+	Route.prototype.fileUnload = function(){
+		File.unload();
+	}
+
+	/* --: element Global Functions : -- */
+	Route.prototype.removeAllListners = function(){
+		el().removeAllListener();
 	}
 }
 
@@ -289,11 +313,16 @@ function _call_hook(instance, key, val = ''){
 	return Hook.call("ROUTE", key, val);
 }
 
-function _runCallBack(slug){ //_l('here');
+function _runMainCallBack(slug){ //_l('here');
 	//var args = Helper.collection(arguments);
 	//var slug= window.location.hash;
+
+	/* Current URL */
+	//State.site_url = location.protocol+"//"+location.hostname+location.pathname+'#/';
+
 	var route = State; //new Route('hash', true);
 	route.slugChange +=1;
+
 	/* action arguments */
 	var args = route.segments();
 	
@@ -301,7 +330,7 @@ function _runCallBack(slug){ //_l('here');
 	//el("", null, 'removeAllListener'); 
 
 	/* Make the app view empty */
-	State.appViewIsEmpty(true);
+	route.appViewIsEmpty(true);
 
 	// parse route for callback
 	var match = route.parse(slug);
@@ -352,7 +381,7 @@ function _runCallBack(slug){ //_l('here');
 			if(NotFoundModule){
 				NotFoundModule.notFoundControl.show();
 			} else {
-				State.appViewIsEmpty(false,`
+				route.appViewIsEmpty(false,`
 					<div style="padding : 5px; margin : 5px;">
 						<div style="width : 100%; heigth : auto; border : 1px dotted black;">
 							<h1 style="font-family : sarif; font-weight : bold; font-size : 40px; text-align:center;">404 Not Found</h1>

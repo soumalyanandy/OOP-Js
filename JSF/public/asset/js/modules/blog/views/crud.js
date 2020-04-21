@@ -70,7 +70,7 @@ export var CRUD_VIEW = {
             </div>
             <div class="col-sm-12 mt-3">
                 <a _redirect="(edit_link)" id="(edit_blog_btn)" class="btn btn-info editBtn">Edit</a>
-                <a _redirect="(delete_link)" id="(delete_blog_btn)" class="btn btn-danger deleteBtn">Delete</a>
+                <a _confirm_redirect="(delete_link_with_msg)" id="(delete_blog_btn)" class="btn btn-danger deleteBtn">Delete</a>
             </div>
         </div>
         <hr>

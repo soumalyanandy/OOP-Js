@@ -8,13 +8,17 @@ import {Module} from './module';
 /*
     Rules to follow : 
     1. To call 'dynamic event listner' we need unique element id.
-    2. 
+    2. To call 'simple event listner' we need unique element id.
 */
 
 /* Add/Update Window Object */
 window.Array = Prototype.Array;
 window.NodeList = Prototype.NodeList;
+window.Object = Prototype.Object;
 window.State = new Route('hash', false);
+window.elementSelectors = [];
+window.EventObserve = [];
+
 
 /* Constants */
 const system = window.window;
@@ -23,7 +27,7 @@ const EVENTS = {
     'LOAD' : 'load',
     'DOM_READY' : 'DOMContentLoaded',
 	'READYSTATE' : 'readystatechange',
-	'DOM_MODIFY' : 'DOMSubtreeModified',
+	'DOM_MODIFY' : 'DOMSubtreeModified', // For Developer : It may cause infinit loop written in MDN. 
 	'CHANGE' : 'change',
     'CLICK' : 'click',
     'SUBMIT' : 'submit',
@@ -31,8 +35,9 @@ const EVENTS = {
 }
 
 /* Wrapper */
-export function el(selector, parent = null, func_name = null, callBackFunc = false){
+export function el(selector = false, parent = null, func_name = null, callBackFunc = false){
     var Element = new Ele();
+    if(!selector) return Element;
     if(func_name == null){
         Element.set(selector, parent);
     } else{
@@ -41,14 +46,15 @@ export function el(selector, parent = null, func_name = null, callBackFunc = fal
     if(typeof callBackFunc === "function") callBackFunc();
     return Element;
 }
-
+//window.EventObserve = el(false, null, 'observe');
 var Ele;
 /* singletons! */
 (function() {
     var instance;
     Ele = function Ele(){
         this.debug = false;
-        this.Listeners = [];
+        this.actions = [];
+        this.actionListeners = [];
         this.observe = [];
 		if (instance) {
 	      	return instance;
@@ -63,40 +69,72 @@ var Ele;
 
 /* Element Class Properties */
 Ele.prototype.set = function(selector, parent = null){
+    /*
+        NOTE : if selector is an element object then if we check expression (selector == false), 
+        it will evaluate to true. To get currect result we need to check with === operator. 
+    */
+    if(selector === false){
+        throw new Error('Invalid selector at ele.set() function.');
+    }
+
     this.elements = {};
     this.selectors = {};
     this.target = null; 
-    // selector
-    switch(true){
-        case 'window': selector = system; break;
-        case 'document': selector = doc; break;
-    }
+    this.parent_sel = null;
    
     //parent 
-    this.parent = parent == null?doc:doc.querySelector(parent);
-    var parent = parent == null?'':parent+' ';
-    this.id = null;
-
-    if(this.isElement(selector)){
-        this.target = selector == 'window'?window.window:selector;
+    this.parent = (parent == null)?doc:doc.querySelector(parent);
+    this.parent = (selector == 'window')?system:this.parent;
+    if(this.parent == system){
+        this.parent_sel = 'win'; 
+    } else if(this.parent == doc){
+        this.parent_sel = 'doc'; 
     } else {
-        if(this.parent == doc){
-            this.id = 'doc'; 
+        this.parent_sel = this.parent.tagName+"#"+this.parent.id;
+    }
+    // check for element type
+    if(this.isElement(selector)){
+        this.target = (selector == 'window')?system:selector;
+        if(this.elements[this.parent_sel] instanceof Array){
+            this.elements[this.parent_sel].push(selector);
         } else {
-            this.id = this.parent.tagName+"#"+this.parent.id;
+            this.elements[this.parent_sel] = [selector];
         }
-        this.target = this.elements[this.id] = (this.parent).querySelectorAll(parent+selector).toArray(); //Array.prototype.slice.call((this.parent).querySelectorAll(parent+selector));
-        
-        var THIS = this;
-        for (var key in this.elements) {
-            if (this.elements.hasOwnProperty(key)) {
-                this.elements[key].forEach(function(el,i){
-                    THIS.selectors[key] = Array();
-                    THIS.selectors[key].push(el.tagName+"#"+el.id);
-                });
-            }
+    } else {
+        var query_selector = (parent == null)?selector:parent+' '+selector;
+        this.target = this.elements[this.parent_sel] = (this.parent).querySelectorAll(query_selector).toArray(); //Array.prototype.slice.call((this.parent).querySelectorAll(parent+selector));
+    }
+
+    var THIS = this;
+    for (var key in this.elements) {
+        if (this.elements.hasOwnProperty(key)) {
+            this.elements[key].forEach(function(el,i){
+                if(typeof window.elementSelectors[key] !== 'object'){ 
+                    window.elementSelectors[key] = [];
+                } 
+                if(!THIS.selectorExists(window.elementSelectors[key], el.tagName+"#"+el.id)){ //typeof window.EventObserve[el.tagName+"#"+el.id] === "undefined"
+                    window.elementSelectors[key].push({
+                        'sel' : el.tagName+"#"+el.id,
+                        'dynamic' : false
+                    });
+                }
+            });
         }
     }
+    _l('------- ELEMENT ------');
+    _l(window.elementSelectors);
+    _l('------- OBSERVE ------');
+    _l(window.EventObserve);
+}
+
+Ele.prototype.selectorExists = function(arr, sel){
+    var exists = false;
+    arr.forEach(function(obj, i){
+        if(obj.sel == sel){
+            exists = true;
+        }
+    });
+    return exists;
 }
 
 Ele.prototype.get = function(id = null){
@@ -116,6 +154,54 @@ Ele.prototype.getAll = function(id = null){
 Ele.prototype.find = function(selector){
     this.target = (this.get()).querySelectorAll(selector).toArray(); //Array.prototype.slice.call((this.get()).querySelectorAll(selector));
     return this;
+}
+
+Ele.prototype.reg_action = function(action, listner){
+    if(!this.actions.hasItem(action)){
+        this.actions.push(action);
+        this.actionListeners.push(listner);
+    }
+}
+
+Ele.prototype.del_action = function(action){
+    var pos = this.actions.hasItem(action);
+    if(pos != -1){
+        this.actions.splice(pos, 1);
+        this.actionListeners.splice(pos, 1);
+    }
+}
+
+Ele.prototype.action = function(command){
+    var ELEMENT_SCOPE = this;
+    (this.actions).forEach(function(action, idx){
+        if(action.toUpperCase() == command.toUpperCase()){
+            if(ELEMENT_SCOPE.get().hasAttribute('_'+command)){
+                var param = ELEMENT_SCOPE.get().getAttribute('_'+command);
+                //var ele = ELEMENT_SCOPE.get().tagName+"#"+ELEMENT_SCOPE.get().id;
+                ELEMENT_SCOPE.actionListeners[idx].call({param},[ELEMENT_SCOPE.get()]);
+            }
+        }
+    });
+    /*switch(command){
+        case "redirect" :
+            if(this.get().hasAttribute('_redirect')){
+                var route = this.get().getAttribute('_redirect');
+                State.goto(route); 
+            }
+        break;
+        case "confirm_redirect" : 
+            if(this.get().hasAttribute('_confirm_redirect')){ 
+                var param = this.get().getAttribute('_confirm_redirect').split(",");
+                if(confirm(param[0])){
+                    State.goto(param[1]); 
+                }
+            }
+        break;
+    }*/
+}
+
+Ele.prototype.observe = function(){
+    return this.observe;
 }
 
 Ele.prototype.create = function(tag){
@@ -190,8 +276,8 @@ Ele.prototype.on = function(){
                 }
             }
             this.eventListener(EVENTS[event], Handler);
-        } else {
-            (this.target).forEach(function(ele, i){
+        } else { //_l("ON method target list : "); _l(this.target);
+            (this.target).forEach(function(ele, i){ 
                 var Handler = function(){
                     var e = Helper.collection(arguments);
                     e = e[0];
@@ -201,7 +287,7 @@ Ele.prototype.on = function(){
                     var selector = element.tagName+"#"+element.id;
                     var parent_selector = (THIS.parent !== doc)?THIS.parent.tagName+"#"+THIS.parent.id:doc; 
                     //_w("Event : "+(EVENTS[event] || EVENTS.DOM_MODIFY));
-                    //_w("Element : "+e.target);
+                    _w("Element : "+e.target);
                     if(args.length == 3){
                         callback.apply({},[e, selector, parent_selector, State.modules, args.slice(2)]);
                     } else {
@@ -216,23 +302,43 @@ Ele.prototype.on = function(){
     }
 }
 
-Ele.prototype.dynamic = function(){ //_l('dynamic');
+Ele.prototype.dynamic = function(){ //_l(this.selectors);
     var args = Helper.collection(arguments); // Array like object OR Collection
-    var SELECTORS = this.selectors;
-    var PARENT = this.parent;
-    var THIS = this;
-    try{
-        if(typeof args[0] !== 'function' && typeof args[1] !== 'function') {
-		    throw new Error('Invalid callback in element.js on line no. 123!');
-        }
+    var SELECTORS = window.elementSelectors;
+    var CURRENT_TARGET = this.get().tagName+"#"+this.get().id;
+    
 
-        /* if(typeof args[0] !== 'string'){
-            throw new Error('Invalid event type at ele.on() function.');
-        } else if(!args[1] instanceof Array){
-            throw new Error('Invalid module type at ele.on() function.');
-        } else if(typeof args[2] !== 'function'){
-            throw new Error('Invalid callback at ele.on() function.');
-        } */
+    /* Make element event listener dynamic */
+    for(var parent in SELECTORS){
+        if(SELECTORS.hasOwnProperty(parent)){
+            SELECTORS[parent].forEach(function(obj, i){
+                if(obj.sel == CURRENT_TARGET){
+                    obj.dynamic = true;
+                }
+            });
+        }
+    }
+   
+    /* On Event ! */
+    if(args.length == 3){
+        this.on(args[0],args[1],args[2]);
+    } else {
+        this.on(args[0],args[1]);
+    }
+    
+
+    /*try{
+        //if(typeof args[0] !== 'function' && typeof args[1] !== 'function') {
+		//    throw new Error('Invalid callback in element.js on line no. 123!');
+        //} 
+
+        //if(typeof args[0] !== 'string'){
+        //    throw new Error('Invalid event type at ele.on() function.');
+        //} else if(!args[1] instanceof Array){
+        //   throw new Error('Invalid module type at ele.on() function.');
+        //} else if(typeof args[2] !== 'function'){
+        //    throw new Error('Invalid callback at ele.on() function.');
+        //} 
 
         //var event = (typeof args[0] === 'function')?EVENTS.DOM_MODIFY:args[0].toUpperCase();
         //var callback = (typeof args[0] === 'function')?args[0]:args[1];
@@ -250,7 +356,7 @@ Ele.prototype.dynamic = function(){ //_l('dynamic');
             var modules = (args[1] instanceof Array)?args[1]:[];
             var callback = (typeof args[2] === 'function')?args[2]:function(){};
             
-            /* Load module */
+            // Load module 
             var module = new Module();
             module.load(modules);
         } else {
@@ -282,6 +388,11 @@ Ele.prototype.dynamic = function(){ //_l('dynamic');
             el(ele).eventListener((EVENTS[event] || EVENTS.DOM_MODIFY), Handler);
         });
         
+        //  IF WE USE DOCUMENT SUB_TREE_MODIFIED EVENT TO REBIND EVENT LISTENERS 
+        //  THEN BROWSER WILL GET HANGED !! SO DO NOT USE THIS TYPE OF LOGIC.
+        //-------------- TOO MUCH RECURSIONS -------------
+        var THIS = this;
+        var PARENT = this.parent;
         var ParentHandler = function(){
             var args = Helper.collection(arguments);
             var ev = args[0];
@@ -293,42 +404,63 @@ Ele.prototype.dynamic = function(){ //_l('dynamic');
             //_w("PARENT Element : "+parent_element);
             // which parent was under observation 
             //if(typeof THIS.observe[parent_selector] !== "undefined"){ 
-            /* _l("TARGET:");
-            _l(ev.target);
-            _l("OBSERVE");
-            _l(THIS.observe); */
-            
+            // _l("TARGET:");
+            //_l(ev.target);
+            //_l("OBSERVE");
+            //_l(THIS.observe); 
+            _l("ParentHandler called !");
             for(var ele in THIS.observe){
                 if(THIS.debug) _l("ele : "+ele);
-                var qs = (parent_element).querySelectorAll(ele);
-                for (var elem of qs) {
-                    if(THIS.debug) _l("qs_ele : "+elem);
-                    THIS.observe[ele].forEach(function(obj, k){
-                        if(THIS.debug) _l("evt : "+obj.evt);
-                        var ChildHandler = function() {
-                            var e = Helper.collection(arguments);
-                            e = e[0];
-                            e.stopPropagation();
-                            e.stopImmediatePropagation();
-                            var element = e.target;
-                            var child_selector = element.tagName+"#"+element.id;
-                            //_w("Called Event : "+(EVENTS[event] || EVENTS.DOM_MODIFY));
-                            //_w("CHILD Element : "+element);
-                            if(args.length == 3){
-                                obj.callBack.apply({},[e, child_selector, parent_selector, State.modules, args.slice(2)]);
-                            } else {
-                                obj.callBack.apply({},[e, child_selector, parent_selector, args.slice(2)]);
+                if(ele.indexOf("#") !== -1){
+                    var qs = (parent_element).querySelectorAll(ele); //(parent_element)
+                    for (var elem of qs) { //_l(elem);
+                        if(THIS.debug) _l("qs_ele : "+elem);
+                        THIS.observe[ele].forEach(function(obj, k){
+                            if(THIS.debug) _l("evt : "+obj.evt);
+                            var ChildHandler = function() {
+                                var e = Helper.collection(arguments);
+                                e = e[0];
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                var element = e.target;
+                                var child_selector = element.tagName+"#"+element.id;
+                                //_w("Called Event : "+(EVENTS[event] || EVENTS.DOM_MODIFY));
+                                //_w("CHILD Element : "+element);
+                                // remove Listener
+                                //element.removeEventListener(e,ChildHandler,false);
+                                
+                                if(args.length == 3){
+                                    obj.callBack.apply({},[e, child_selector, parent_selector, State.modules, args.slice(2)]);
+                                } else {
+                                    obj.callBack.apply({},[e, child_selector, parent_selector, args.slice(2)]);
+                                }
+                                
                             }
-                        }
-                        el(elem).eventListener((obj.evt || EVENTS.DOM_MODIFY), ChildHandler);
-                    });
+                            el(elem).eventListener((obj.evt || EVENTS.DOM_MODIFY), ChildHandler);
+                        });
+                    }
                 }
             }
         }
         el(PARENT).eventListener(EVENTS.DOM_MODIFY, ParentHandler);
+        //-------------- TOO MUCH RECURSIONS -------------
+        
     } catch(err){
         _e(err);
-    }
+    }*/
+}
+
+Ele.prototype.refreshListeners = function(){
+    _detachCurrentListeners(true);
+    _attachLastListeners(true);
+}
+
+Ele.prototype.detachCurrentListeners = function(){
+    _detachCurrentListeners();
+}
+
+Ele.prototype.attachLastListeners = function(){
+    _attachLastListeners();
 }
 
 Ele.prototype.eventListener = function(event, callBackFunc, useCapture = false){
@@ -339,8 +471,8 @@ Ele.prototype.removeListener = function(event, callBackFunc, useCapture = true){
     _detachEvent(this, this.target, event, callBackFunc, useCapture);
 }
 
-Ele.prototype.removeAllListener = function(){ //_l("remove all listner .........");
-    //_removeAllListener(this);
+Ele.prototype.removeAllListener = function(){ 
+    _removeAllListener(this);
 }
 
 Ele.prototype.observeEvents = function(){
@@ -371,6 +503,56 @@ Ele.prototype.isElement = function(o){
 }
 
 /* Abstruction */
+function _detachCurrentListeners(tracking = false){ //_w("_detachListeners");
+	for(var parent in window.elementSelectors){
+		if(window.elementSelectors.hasOwnProperty(parent)){
+			window.elementSelectors[parent].forEach(function(eleObj, i){
+                var selector = eleObj.sel;
+                selector = Helper.rtrim(selector,"#");
+                //_l("del listener from element : "+selector);
+				var events = window.EventObserve[selector];
+                var target = document.querySelector(selector);
+                //_l("target : ");
+                //_l(target);
+				if(target != null && typeof events !== "undefined"){
+                    events.forEach(function(obj, j){
+						(target.removeEventListener)?target.removeEventListener(obj.evt, obj.callBack, obj.capture) : target.detachEvent(obj.evt, obj.callBack, obj.capture);
+					});
+				} //_l(eleObj.dynamic); _l(window.elementSelectors[parent][i]);
+				if(!eleObj.dynamic && !tracking){	
+					delete window.EventObserve[selector];
+					window.elementSelectors[parent].remove(i); 
+				}
+			});
+		}
+	}
+}
+
+function _attachLastListeners(tracking = false){ //_w("_attachListeners"); 
+    //_l(window.elementSelectors); _l(window.EventObserve);
+	for(var parent in window.elementSelectors){
+		if(window.elementSelectors.hasOwnProperty(parent)){
+			window.elementSelectors[parent].forEach(function(eleObj, i){
+                if((eleObj.dynamic && !tracking) || tracking){
+                    var selector = eleObj.sel;
+                    selector = Helper.rtrim(selector,"#");
+					//_l(typeof selector);
+					//_l("add listener to element : "+selector);
+					var events = window.EventObserve[selector];
+					var target = document.querySelector(selector);
+					//_l("target : ");
+                    //_l(target);
+					if(target != null && typeof events !== "undefined"){
+						events.forEach(function(obj, j){
+							(target.addEventListener)?target.addEventListener(obj.evt, obj.callBack, obj.capture) : target.attachEvent(obj.evt, obj.callBack, obj.capture);
+						});
+					}
+				}
+			});
+		}
+	}
+}
+
 function _attachEvent(instance, target, event, callBackFunc, useCapture = false){
     if(!target.id && !target instanceof HTMLDocument && !target instanceof Window){
         _e(target.tagName+" Element must have an ID.");
@@ -392,6 +574,7 @@ function _attachEvent(instance, target, event, callBackFunc, useCapture = false)
             if(instance.debug) _l("k : "+k);
             if(instance.debug) _l("obj.evt : "+obj.evt);
             if(instance.debug) _l("event : "+event);
+            
             //_l("k : "+k);
             //_l("obj.evt : "+obj.evt);
             //_l("event : "+event);
@@ -422,16 +605,16 @@ function _attachEvent(instance, target, event, callBackFunc, useCapture = false)
         //target = document.getElementById(target.id);
         if(instance.debug) _l("Target element : ");
         if(instance.debug) _l(target);
-        target.setAttribute('event', evt_str);
+        //target.setAttribute('event', evt_str);
         if(!found_listner) instance.observe[target.tagName+"#"+target.id].push({evt : event, callBack : callBackFunc, capture : useCapture}); // = instance.Listeners;
         //instance.Listeners = [];
-        if(event_exists){
+        /*if(event_exists){
             if(instance.debug) _l("event listener removed for : "+event+" in "+target.tagName+"#"+target.id);
             (target.removeEventListener)?target.removeEventListener(listener_obj.evt, listener_obj.callBack, listener_obj.capture) : target.detachEvent(listener_obj.evt, listener_obj.callBack, listener_obj.capture);
-        }
+        }*/
         if(instance.debug) _l("event listener added for : "+event+" in "+target.tagName+"#"+target.id);
         if(instance.debug) _l(instance.observe);
-        (target.addEventListener)?target.addEventListener(event, callBackFunc, useCapture) : target.attachEvent(event, callBackFunc, useCapture);
+        /* if(!found_listner)  */(target.addEventListener)?target.addEventListener(event, callBackFunc, useCapture) : target.attachEvent(event, callBackFunc, useCapture);
     } 
     /* Event Handler will call for window event (call one time) */
     else if(target instanceof Window && !event_exists){ //typeof instance.observe['win'] === "undefined" && 
@@ -439,115 +622,94 @@ function _attachEvent(instance, target, event, callBackFunc, useCapture = false)
         (target.addEventListener)?target.addEventListener(event, callBackFunc, useCapture) : target.attachEvent(event, callBackFunc, useCapture);
     } 
     /* Event Listener will call for document event (call more than one time) */
-    else if(target instanceof HTMLDocument){ // typeof instance.observe['doc'] === "undefined" &&  && !event_exists
+    else if(target instanceof HTMLDocument && !event_exists){ // typeof instance.observe['doc'] === "undefined" &&  && !event_exists
         instance.observe['doc'] = [{evt : event, callBack : callBackFunc, capture : useCapture}];
         (target.addEventListener)?target.addEventListener(event, callBackFunc, useCapture) : target.attachEvent(event, callBackFunc, useCapture);
     } 
-    //_l(instance.observe);
+    window.EventObserve = instance.observe;
     if(instance.debug) _l("Observe");
     if(instance.debug) _l(instance.observe);
 }
 
-/* ---------------------------------- not in use ---------------------------------- */
 function _detachEvent(instance, target, event, callBackFunc, useCapture = false){
-    /* check element events */
-    var evt = [];
-    var event_exists = false;
-    var callBack = false;
-    var capture = '';
+    var found_listner = false;
     var listener = [];
-    if(instance.debug) _l(target);
-    if(target != null && target.hasAttribute){
-        /* evt = target.getAttribute('event');
-        if(evt.indexOf(event) === -1){
-            return false;
-        } else { 
-            if(typeof evt == "string"){
-                event_exists = 0;
-            } else {
-                evt.remove(event);
-                event_exists = evt.length;
-            }
-        } */
+    var evt = [];
+    var currentEvent = event.toLowerCase();
+    var callBack = "";
+    var capture = "";
 
-        var found_listner = false;
-        if(instance.observe[target.tagName+"#"+target.id]){
-            instance.observe[target.tagName+"#"+target.id].forEach(function(obj, k){
-                if(instance.debug) _l("k : "+k);
-                if(instance.debug) _l("obj.evt : "+obj.evt);
-                if(instance.debug) _l("event : "+event);
-                if(obj.evt.toLowerCase() == event.toLowerCase()){
-                    evt.remove(event);
-                    found_listner = true;
-                    event_exists = true;
-                    callBack = obj.callBack;
-                    capture = obj.capture;
-                } else {
-                    listener.push(obj);
-                }
-            });
-        }
-    } 
-    if(instance.debug) _l(' ------------------- remove listner ------------------- ');
-    if(instance.debug) _l(instance.observe);
-    /*if(typeof instance.observe['win'] !== "undefined" && target instanceof Window){
-        delete instance.observe['win'];
-        (target.removeEventListener)?target.removeEventListener(event, callBack, capture) : target.detachEvent(event, callBack, capture);
-    } else if(typeof instance.observe['doc'] !== "undefined" && target instanceof HTMLDocument){
-        delete instance.observe['doc'];
-        (target.removeEventListener)?target.removeEventListener(event, callBack, capture) : target.detachEvent(event, callBack, capture);
-    } else*/ if (target != null && event_exists) { 
-        (target.removeEventListener)?target.removeEventListener(event, callBack, capture) : target.detachEvent(event, callBack, capture);
-        if(evt.length > 0) target.setAttribute('event', evt);
-        else target.removeAttribute('event');
+    if(target.setAttribute){
+        evt = target.getAttribute('event').split(" ").map(function(val, i){
+            return val.toLowerCase();
+        });
+    }
+    if(instance.observe[target.tagName+"#"+target.id]){
+        instance.observe[target.tagName+"#"+target.id].forEach(function(obj, k){
+            if(instance.debug) _l("k : "+k);
+            if(instance.debug) _l("obj.evt : "+obj.evt);
+            if(instance.debug) _l("event : "+event);
+            if(obj.evt.toLowerCase() == currentEvent && obj.callBack == callBackFunc){
+                found_listner = true;
+                callBack = obj.callBack;
+                capture = obj.capture;
+                if(evt.hasItem(currentEvent)) evt.removeItem(currentEvent);
+                target.setAttribute(evt.join(" "));
+            } else {
+                listener.push(obj);
+            }
+        });
         instance.observe[target.tagName+"#"+target.id] = listener;
-    } /* else {
-        if(target != null){
-            var evt_info = instance.observe[0];
-            (target.removeEventListener)?target.removeEventListener(evt_info.evt, evt_info.callBack, evt_info.capture) : target.detachEvent(evt_info.evt, evt_info.callBack, evt_info.capture);
-            //(target.removeEventListener)?target.removeEventListener(event, callBackFunc, useCapture) : target.detachEvent(event, callBackFunc, useCapture);
-            target.removeAttribute('event');
-            delete instance.observe[target.tagName+"#"+target.id];
-        }
-    } */
-    if(instance.debug) _l("after Observe");
-    if(instance.debug) _l(instance.observe);
+    }
+    (target.removeEventListener)?target.removeEventListener(event, callBack, capture) : target.detachEvent(event, callBack, capture);
 }
 
-/* ---------------------------------- not in use ---------------------------------- */
-function _removeAllListener(instance){ return false;
-    //_l("REMOVE ALL LISTENER ------------------->"); 
-    //_l(typeof instance.observe); 
-    //return false;
-    for(var sel in instance.observe){
-        var obj_arr = instance.observe[sel];
-        //_l("removing .. "+sel);
-        //_l(obj_arr);
-        for(var i in obj_arr){
-            var obj = obj_arr[i];
-            switch(sel){
-                case 'win' : sel = system; break;
-                case 'doc' : sel = doc; break;
-            }
-            instance.target = (sel instanceof Window || sel instanceof HTMLDocument)?sel:doc.querySelector(sel);
-            instance.removeListener(obj.evt, obj.callBack, obj.capture);
-        }
-    }
-    /*instance.observe.forEach(function(obj_arr, sel){
-        _l("removing .. "+sel);
-        _l(obj_arr);
-        obj_arr.forEach(function(obj_info, i){
-            switch(sel){
-                case 'win' : sel = system; break;
-                case 'doc' : sel = doc; break;
-            }
-            instance.target = (sel instanceof Window || sel instanceof HTMLDocument)?sel:doc.querySelector(sel);
-            _l("REMOVE LISTENER ------------------->");
-            _l(sel);
-            instance.removeListener(obj_info.evt, obj_info.callBack, obj_info.capture);
-        });
-    });*/
-    instance.observe = new Array();
+function _removeAllListener(instance){ 
+    if(instance.debug) _l("REMOVE ALL LISTENER ------------------->"); 
+    for(var parent in window.elementSelectors){
+		if(window.elementSelectors.hasOwnProperty(parent)){
+			window.elementSelectors[parent].forEach(function(eleObj, i){
+                var selector = eleObj.sel;
+                selector = Helper.rtrim(selector,"#");
+                if(instance.debug) _l("del listener from element : "+selector);
+				var events = window.EventObserve[selector];
+                var target = document.querySelector(selector);
+                if(instance.debug) _l("target : ");
+                if(instance.debug) _l(target);
+				if(target != null && typeof events !== "undefined"){
+                    events.forEach(function(obj, j){
+						(target.removeEventListener)?target.removeEventListener(obj.evt, obj.callBack, obj.capture) : target.detachEvent(obj.evt, obj.callBack, obj.capture);
+					});
+                } 	
+                /* remove from track list */
+                delete window.EventObserve[selector];
+                window.elementSelectors[parent].remove(i); 
+			});
+		}
+	}
+    /*if(instance.debug) _l("REMOVE ALL LISTENER ------------------->"); 
+    if(instance.debug) _l(typeof instance.observe);
+	for(var ele in instance.observe){ 
+		// filter user defined prototype functions 
+		if(typeof ele !== "function" && document.querySelector(ele) != null){
+			if(instance.debug) _l('ele : '+ele);
+			//_l('parent : '+instance.selector.tagName+"#"+instance.selector.id);
+			if(instance.debug) _l(document.querySelector(ele));
+			// remove listner
+			var target = document.querySelector(ele);
+			if(instance.debug) _l('Target to remove : ');
+			if(instance.debug) _l(target);
+			instance.observe[ele].forEach(function(obj, k){
+				//_l("Removing event : "+obj.evt);
+                //_l(obj.capture);
+                instance.removeListener(obj.evt, obj.callBack, obj.capture);
+			});
+			delete instance.observe[ele];
+		}
+	}
+	if(instance.debug) _l("Window Event Observe : --------------------------------------------");
+    if(instance.debug) _l(instance.observe);
+    if(instance.debug) _l("*************************************************************");*/
 }
 
 
@@ -619,5 +781,74 @@ function foo(event) {
           }
  area.addEventListener('click',foo,true);
  area.removeEventListener('click',foo,true);
+
+*/
+/*
+Will the same addEventListener work?
+------------------------------------
+url : https://stackoverflow.com/questions/10364298/will-the-same-addeventlistener-work
+
+func will not be called twice on click, no; but keep reading for details and a "gotcha."
+
+From addEventListener in the spec:
+
+If multiple identical EventListeners are registered on the same EventTarget with the same parameters the duplicate instances are discarded. They do not cause the EventListener to be called twice and since they are discarded they do not need to be removed with the removeEventListener method.
+
+(My emphasis)
+
+Here's an example:
+
+var target = document.getElementById("target");
+
+target.addEventListener("click", foo, false);
+target.addEventListener("click", foo, false);
+
+function foo() {
+  var p = document.createElement("p");
+  p.innerHTML = "This only appears once per click, but we registered the handler twice.";
+  document.body.appendChild(p);
+}
+<input type="button" id="target" value="Click Me">
+ Run code snippetExpand snippet
+It's important to note, though, that it has to be the same function, not just a function that does the same thing. For example, here I'm hooking up four separate functions to the element, all of which will get called:
+
+var target = document.getElementById("target");
+
+var count;
+for (count = 0; count < 4; ++count) {
+  target.addEventListener("click", function() {
+    var p = document.createElement("p");
+    p.innerHTML = "This gets repeated.";
+    document.body.appendChild(p);
+  }, false);
+}
+<input type="button" id="target" value="Click Me">
+ Run code snippetExpand snippet
+That's because on every loop iteration, a different function is created (even though the code is the same).
  
+*As we did not save or copy the function defination into a variable we actually create the same function defination. 
+*If we use to save the defination into a variable and the call the variable from inside of the loop then that will has the same defination copy.
+
+*/
+
+/*
+We can ignore loop and use map() for iterating array of objects : 
+------------------------------------------------------------------
+url : https://www.w3schools.com/jsref/jsref_map.asp
+
+var persons = [
+  {firstname : "Malcom", lastname: "Reynolds"},
+  {firstname : "Kaylee", lastname: "Frye"},
+  {firstname : "Jayne", lastname: "Cobb"}
+];
+
+
+function getFullName(item) {
+  var fullname = [item.firstname,item.lastname].join(" ");
+  return fullname;
+}
+
+function myFunction() {
+  document.getElementById("demo").innerHTML = persons.map(getFullName);
+}
 */
