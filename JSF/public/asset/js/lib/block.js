@@ -17,15 +17,19 @@ export function Block(id, classes = [], debug = false){
 	//_remove_listner(this);
 
 	/* create block if not exists */ 
-	this.selector = document.querySelector(id);
-	if(this.selector == null){ 
-		var element = document.createElement('DIV'); 
-		element.id = id.replace("#","");
-		element.className = classes.join(" ");
+	if(el(id).get() == null){ 
+		var element = el("DIV[_appView]").create('DIV', "", id.replace("#",""), "", classes);
+		//_w(element);
+		//element.id = id.replace("#","");
+		//element.className = classes.join(" ");
 		/* search for hidden attribute _appView */
-		this.selector = document.querySelector("DIV[_appView]").appendChild(element);
-	}
-	
+		//el("DIV[_appView]").get().appendChild(element);
+	}/*  else {
+		this.selector = el(id).get();
+	} */
+	//_w(id);
+	this.selector = el(id).get();
+	//_w(this.selector);
 	this.template_selector = '';
 	this.is_template = false;
 	this.is_append = true;
@@ -163,6 +167,10 @@ export function Block(id, classes = [], debug = false){
 		_clear(this);
 		_call_hook(this, 'after-cycle-before-callback'); //middleware
 		if(typeof callbackFunc === 'function') callbackFunc.apply({},[this.selector]);
+	}
+
+	Block.prototype.write = function(text, id = "", classes = [], style = [], attr = []){
+		_write(this, text, id, classes, style, attr);
 	}
 
 	Block.prototype.hook_reg = function(hookObj = {}){
@@ -397,6 +405,23 @@ function _render(instance, callbackFunc = false, buffer = false){
 	
 	_call_hook(instance, 'after-render-before-callback'); //middleware
 	if(typeof callbackFunc === 'function') callbackFunc.apply({}, [instance.selector]);
+}
+
+function _write(instance, text, id = "", classes = [], style = [], attr = []){
+	var element = document.createElement('DIV');
+	element.innerHTML = text;
+	if(id != null) element.id = id;
+	if(classes.length > 0) element.className = classes.join(" ");
+	// add styles
+	style.forEach(function(obj, key){ 
+		element.style[obj.key] = obj.val;
+	});
+	// add attributes 
+	attr.forEach(function(obj, key){
+		element.setAttribute(obj.key,obj.val);
+	});
+	// append
+	instance.selector.appendChild(element);
 }
 
 function _setTemplate(instance, bool){
