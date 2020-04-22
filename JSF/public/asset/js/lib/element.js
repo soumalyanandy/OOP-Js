@@ -122,10 +122,10 @@ Ele.prototype.set = function(selector, parent = null){
             });
         }
     }
-    //_l('------- ELEMENT ------');
-    //_l(window.elementSelectors);
-    //_l('------- OBSERVE ------');
-    //_l(window.EventObserve);
+    _l('------- ELEMENT ------');
+    _l(window.elementSelectors);
+    _l('------- OBSERVE ------');
+    _l(window.EventObserve);
 }
 
 Ele.prototype.selectorExists = function(arr, sel){
@@ -203,6 +203,32 @@ Ele.prototype.action = function(command){
 
 Ele.prototype.observe = function(){
     return this.observe;
+}
+
+Ele.prototype.create = function(tag, text = "", id = "", name = "", classes = [], style = [], attr = []){
+    //return doc.createElement(tag.toUpperCase());
+    if(id == null || id == ""){
+        throw new Error('Id can not be blank at ele.create() function.');
+    }
+    var element = doc.createElement(tag.toUpperCase());
+    element.id = id;
+	if(text != "") element.innerHTML = text;
+	if(name != "") element.name = name;
+	if(classes.length > 0) element.className = classes.join(" ");
+	// add styles
+	style.forEach(function(obj, key){ 
+		element.style[obj.key] = obj.val;
+	});
+	// add attributes 
+	attr.forEach(function(obj, key){
+		element.setAttribute(obj.key, obj.val);
+    }); 
+    //_l('Created element : ');
+    //_l(element);
+	// append
+    this.get().appendChild(element);
+    // set element as current target and return class reference
+    return el("#"+id); //.get()
 }
 
 Ele.prototype.on = function(){
@@ -284,7 +310,7 @@ Ele.prototype.on = function(){
                     var selector = element.tagName+"#"+element.id;
                     var parent_selector = (THIS.parent !== doc)?THIS.parent.tagName+"#"+THIS.parent.id:doc; 
                     //_w("Event : "+(EVENTS[event] || EVENTS.DOM_MODIFY));
-                    //_w("Element : "+e.target);
+                    _w("Element : "+e.target);
                     if(args.length == 3){
                         callback.apply({},[e, selector, parent_selector, State.modules, args.slice(2)]);
                     } else {
