@@ -30,7 +30,8 @@ version 1.0.2 (Alpha)
 Fixation :
 -----------
 Date :  22/04/2020
-Fix : 404 error not display bug. Remove excess code.
+1. Fix 404 error not display bug. 
+2. Remove excess code.
 
 New Features : 
 ---------------
