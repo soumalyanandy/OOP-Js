@@ -27,6 +27,8 @@ version 1.0.0(Alpha)
 
 10. Has user defined help functions and custmize JS prototypes for premitive objects. I call it as 'Helper' and 'Prototype' respectively. 
 
+11. Can use external resource js, css and image files into application by using File Class. I call it as 'File Js' or 'File'
+
 Usage : 
 --------
 1. Use el(Id).on() for single document state event and callBack. Use el(Id).dynamic() for current and future document state event and callBack.
@@ -52,3 +54,14 @@ Limitations :
 8. For data class current database is 'localStorage'. - Driver feature will be available in upcomming releases
 9. Only 'required' validation is there. - Will add custom validation functions and rules in future release
 10. Very propular functions are included. - Will add more in future release
+
+Technologies: 
+--------------
+1. Webpack 4 (node 6.9)
+2. ECMAScript2015
+3. Object oriented programming in Singletone pattern with HMVC structure 
+
+Webpack Start File : JSF/public/asset/js/app.js
+---------------------
+Webpack Output File : JSF/dist/main.js
+---------------------
