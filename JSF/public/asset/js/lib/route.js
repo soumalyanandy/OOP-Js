@@ -52,7 +52,7 @@ export function Route(type = 'url', debug = false){
 		// parse route for callback
 		var match = this.parse(path);
 		if(this.debug) _l("match : "+match);
-		_l("match found : "+match);
+		//_l("match found : "+match);
 		/* If match found ! */
 		if(match){
 			var state = this.currentState();

@@ -218,8 +218,6 @@ export function CRUD(){
 				fileReader.readAsDataURL(SCOPE._el(sel).get().files.item(0));
 			}
 		});
-
-		_w(window.elementSelectors);
 	}
 
 	CRUD.prototype.edit = function(slug, segments){
@@ -273,7 +271,7 @@ export function CRUD(){
 			var hid_file = formEle.querySelector("input[type=hidden][name=file]");
 			hid_file.previousElementSibling.innerText = saveFormData['file_path'];
 			hid_file.value = saveFormData['file'];
-			var img = SCOPE._el("IMG", null, 'create');
+			var img = document.createElement("IMG");
 			img.src = saveFormData['file'];
 			img.style.width = '100%';
 			hid_file.closest(".row").previousElementSibling.classList.remove('d-none');

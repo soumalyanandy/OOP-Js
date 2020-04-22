@@ -14,7 +14,7 @@ var notFoundControl = function(){
         var SCOPE = this;
 
         /* create 404 block */
-        var error404Block = new SCOPE._Block('error404',['row']);
+        var error404Block = new SCOPE._Block('#error404',['row']);
         error404Block.empty();
         error404Block.templateRaw(SCOPE.views['error_404_template']);
         error404Block.assign('site_url',State.site_url);

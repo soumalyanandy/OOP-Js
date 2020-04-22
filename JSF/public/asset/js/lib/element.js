@@ -9,6 +9,7 @@ import {Module} from './module';
     Rules to follow : 
     1. To call 'dynamic event listner' we need unique element id.
     2. To call 'simple event listner' we need unique element id.
+    3. Element ID should me unique through out the page.
 */
 
 /* Add/Update Window Object */
@@ -101,10 +102,10 @@ Ele.prototype.set = function(selector, parent = null){
             this.elements[this.parent_sel] = [selector];
         }
     } else {
-        var query_selector = (parent == null)?selector:parent+' '+selector;
+        var query_selector = (parent == null)?selector:parent+' '+selector; //_l(query_selector);
         this.target = this.elements[this.parent_sel] = (this.parent).querySelectorAll(query_selector).toArray(); //Array.prototype.slice.call((this.parent).querySelectorAll(parent+selector));
     }
-
+    //_l(this.target);
     var THIS = this;
     for (var key in this.elements) {
         if (this.elements.hasOwnProperty(key)) {
@@ -121,10 +122,10 @@ Ele.prototype.set = function(selector, parent = null){
             });
         }
     }
-    _l('------- ELEMENT ------');
-    _l(window.elementSelectors);
-    _l('------- OBSERVE ------');
-    _l(window.EventObserve);
+    //_l('------- ELEMENT ------');
+    //_l(window.elementSelectors);
+    //_l('------- OBSERVE ------');
+    //_l(window.EventObserve);
 }
 
 Ele.prototype.selectorExists = function(arr, sel){
@@ -202,10 +203,6 @@ Ele.prototype.action = function(command){
 
 Ele.prototype.observe = function(){
     return this.observe;
-}
-
-Ele.prototype.create = function(tag){
-    return doc.createElement(tag.toUpperCase());
 }
 
 Ele.prototype.on = function(){
@@ -287,7 +284,7 @@ Ele.prototype.on = function(){
                     var selector = element.tagName+"#"+element.id;
                     var parent_selector = (THIS.parent !== doc)?THIS.parent.tagName+"#"+THIS.parent.id:doc; 
                     //_w("Event : "+(EVENTS[event] || EVENTS.DOM_MODIFY));
-                    _w("Element : "+e.target);
+                    //_w("Element : "+e.target);
                     if(args.length == 3){
                         callback.apply({},[e, selector, parent_selector, State.modules, args.slice(2)]);
                     } else {
