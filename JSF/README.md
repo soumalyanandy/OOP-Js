@@ -1,10 +1,10 @@
 /* Javascript Framework */
-- : JSF :: version 1.0.2 (Alpha) : -
+- : JSF :: version 1.0.0 (Alpha) : -
 
 OR,
 
 - : JavaScript Frame : -
-version 1.0.2 (Alpha)
+version 1.0.0(Alpha)
 
 ---- It is a micro framework written in Vanilla Javascript (Written Style : ECMAScript2015). Have bunch of cool stuffs likes: 
 1. Bind event on window load or/and document state change. It's a nice concept globally acceptable, use for realtime application and SPA. Likely similar to jQuery 'on' event listner functionality. I call it as 'event listner' or 'dynamic'.
