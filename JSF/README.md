@@ -41,6 +41,7 @@ Usage :
 8. We use this class to save and get data. Data.data() -> to set the data param to insert/update. Data.save() -> save the data. Data.get(Id) -> get specific data.
 9. Form validation function to validate user input. Validate.getFormData() -> to get form input. Validate.block() -> to set formBlock instance. Validate.setRules() -> to set validation rules. Validate.setErrorMessages() -> to set error messages. Validate.run() -> run form validation.
 10. This 'helper function' will help to do regular work. rtrim() -> trim space from right side, ltrim() -> trim space from left side, collection() -> convert array like object to collection(array of objects) etc. 'predefined_object.prototype' function will help us to write code in more user readable format. [items].remove(key) -> delete array by key, [items]. removeItem(val) -> remove item by val etc.
+11. File.addJS() -> to load js file, File.addCSS() -> to load css file, File.addIMG() -> to load image file. All files are loaded at the time of module call from route.
 
 Limitations : 
 --------------
