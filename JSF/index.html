@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Blog app using javascript</title>
+	<link rel="shortcut icon" href="public/asset/img/favicon.ico" type="image/x-icon">
+	<link rel="icon" href="public/asset/img/favicon.ico" type="image/x-icon">
+	<style>
+		.loader {
+			border: 16px solid #f3f3f3;
+			border-radius: 50%;
+			border-top: 16px solid blue;
+			border-bottom: 16px solid blue;
+			width: 120px;
+			height: 120px;
+			-webkit-animation: spin 2s linear infinite;
+			animation: spin 2s linear infinite;
+		}
+		
+		DIV#main {
+			width: 100%;
+			height: 50%;
+			/*border: 1px solid #c3c3c3;*/
+			display: flex;
+			flex-wrap: wrap;
+			align-content: center;
+			position:absolute;
+		}
+
+		@-webkit-keyframes spin {
+			0% { -webkit-transform: rotate(0deg); }
+			100% { -webkit-transform: rotate(360deg); }
+		}
+		
+		@keyframes spin {
+			0% { transform: rotate(0deg); }
+			100% { transform: rotate(360deg); }
+		}
+	</style>
+</head>
+<body>
+	<script type="text/javascript">
+		(function (d, t, g) {
+			var bootstrap    = d.createElement(t), s = d.getElementsByTagName(t)[0];
+			bootstrap.type   = 'text/javascript';
+			bootstrap.async   = false;
+			bootstrap.charset = 'UTF-8';
+			bootstrap.src     = g + '?' + (new Date()).getTime();
+			d.body.appendChild(bootstrap);
+		})(document, 'script', 'dist/main.js');
+		(function (d, t) {
+			var view    = d.createElement(t), s = d.getElementsByTagName(t)[0];
+			view.class   = 'container-fluid';
+			view.innerHTML = '<div _appView ></div>';
+			d.body.appendChild(view);
+		})(document, 'div');
+	</script>
+</body>
+</html>
