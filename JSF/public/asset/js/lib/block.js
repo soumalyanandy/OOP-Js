@@ -37,6 +37,7 @@ export function Block(id, classes = [], debug = false){
 	this.layout = this.selector.innerHTML;
 	this.parseHTML = '';
 	this.parseTMPL = '';
+	this.bufferTMPL = '';
 	this.var = {};
 	this.varTMPL = {};
 	this.hooks = Array(); // [] => Array.prototype
@@ -115,6 +116,14 @@ export function Block(id, classes = [], debug = false){
 		}
 	}
 
+	/* Block.prototype.bufferTMPL = function(){
+		return this.bufferTMPL;
+	} */
+
+	Block.prototype.htmlRaw = function(html){
+		_render(this, false, true, html);
+	}
+
 	Block.prototype.hasTemplate = function(bool){
 		_setTemplate(this, bool);
 	}
@@ -154,16 +163,25 @@ export function Block(id, classes = [], debug = false){
 			if (arr.hasOwnProperty(key)) {  
 				var val = (typeof arr[key] !== "object")?JSON.parse(arr[key]):arr[key];
 				val["_key"] = key;
-				_call_hook(this, 'before-append-in-cycle', val);
-				this.append(val, false, false, false);
-				for (var k in val) {
-					if (val.hasOwnProperty(k)) {
-						_clear(this, k);
+				var hookCalled = _call_hook(this, 'before-append-in-cycle', val, function(BLOCK_SCOPE){
+					BLOCK_SCOPE.append(val, false, false, true);
+					for (var k in val) {
+						if (val.hasOwnProperty(k)) {
+							_clear(BLOCK_SCOPE, k);
+						}
+					}
+				});
+				if(!hookCalled){
+					this.append(val, false, false, true);
+					for (var k in val) {
+						if (val.hasOwnProperty(k)) {
+							_clear(this, k);
+						}
 					}
 				}
 			}
 		}
-		_render(this, false, true);
+		_render(this, false, true, this.bufferTMPL);
 		_clear(this);
 		_call_hook(this, 'after-cycle-before-callback'); //middleware
 		if(typeof callbackFunc === 'function') callbackFunc.apply({},[this.selector]);
@@ -175,6 +193,10 @@ export function Block(id, classes = [], debug = false){
 
 	Block.prototype.hook_reg = function(hookObj = {}){
 		_hooks(this, hookObj);
+	}
+
+	Block.prototype.middleware = function(hookKey, callBack){
+		_hooks(this, '{ "'+hookKey+'" : '+callBack.toString()+' }');
 	}
 
 	Block.prototype.attachLastListeners = function(callBack = false){
@@ -190,14 +212,14 @@ export function Block(id, classes = [], debug = false){
 
 /* Abstructions */
 //var hook_instance = false;
-function _hooks(instance, hook = {}){
+function _hooks(instance, hook = {}){ 
 	//if(!hook_instance) hook_instance = new Hook(true);
 	Hook.register("BLOCK", hook);
 }
 
-function _call_hook(instance, key, val = ''){
+function _call_hook(instance, key, val = '', callBack = false){
 	//if(!hook_instance) hook_instance = new Hook(true);
-	return Hook.call("BLOCK", key, val);
+	return Hook.call("BLOCK", key, val, instance, callBack);
 }
 
 /*function _attach_last_listners(instance, debug = true){
@@ -314,6 +336,7 @@ function _clear(instance, key = false){
 			instance.is_template = false;
 			instance.template_selector = '';
 			instance.parseTMPL = '';
+			instance.bufferTMPL = '';
 			instance.varTMPL = {};
 			instance.templateHTML = '';
 			instance.is_append = true;
@@ -361,7 +384,7 @@ function _parse(instance){
 	}
 }
 
-function _render(instance, callbackFunc = false, buffer = false){ 
+function _render(instance, callbackFunc = false, buffer = false, html = null){ 
 	if(instance.debug){
 		if(!instance.is_template) {
 			_l('Block parse html :------------------------------------------------>');
@@ -377,18 +400,21 @@ function _render(instance, callbackFunc = false, buffer = false){
 
 	/* replace HTML */
 	if(!instance.is_template) instance.selector.innerHTML = instance.parseHTML;
+	else if(html != null) instance.selector.innerHTML = html;
 	else { 
 		if(instance.is_append){
-			var html = instance.selector.innerHTML;
+			if(!buffer) var html = instance.selector.innerHTML;
+			else var html = instance.bufferTMPL;
 			html += instance.parseTMPL; 
 			//instance.selector.append(instance.parseTMPL);
 		} else {
 			var html = instance.parseTMPL;
-			html += instance.selector.innerHTML; 
+			if(!buffer) html += instance.selector.innerHTML; 
+			else html += instance.bufferTMPL;
 			//instance.selector.prepend(instance.parseTMPL);
 		}
 		if(!buffer) instance.selector.innerHTML = html;
-		//else return html;
+		else instance.bufferTMPL = html;
 	}
 
 	/* _l("render selector : ");

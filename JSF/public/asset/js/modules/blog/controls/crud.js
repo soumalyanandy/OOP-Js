@@ -30,8 +30,9 @@ export function CRUD(){
 		SCOPE.model = new SCOPE._Data('form');
 
 		/* Load html resource Locally */
-		SCOPE._File.addJS(['public/bootstrap/dist/js/bootstrap.js']);
-		SCOPE._File.addCSS(['public/bootstrap/dist/css/bootstrap.css']);
+		SCOPE._File.addJS(['public/jquery/jquery.js']);
+		SCOPE._File.addJS(['public/bootstrap/js/bootstrap.js']);
+		SCOPE._File.addCSS(['public/bootstrap/css/bootstrap.css']);
 		
 		/* Load HTML resource Globally */
 		//State.addFile('public/bootstrap/dist/js/bootstrap.js','js');
@@ -238,21 +239,37 @@ export function CRUD(){
 		var saveFormData = SCOPE.model.get(form_id);
 
 		/* Load html resource at module call */
-		SCOPE._File.addJS(['public/bootstrap/dist/js/bootstrap.js']);
-		SCOPE._File.addCSS(['public/bootstrap/dist/css/bootstrap.css']);
+		SCOPE._File.addJS(['public/jquery/jquery.js']);
+		SCOPE._File.addJS(['public/bootstrap/js/bootstrap.js']);
+		SCOPE._File.addCSS(['public/bootstrap/css/bootstrap.css']);
 		
 		/* blog from block object */
 		var blogFormBlock = new SCOPE._Block('#editBlogBlock', ['row', 'col-sm-12']);
 
 		/* form block */
+		// register hook in render
+		// IF THERE ARE OTHER REPLACEMENTS OF HTML INSIDE THE SAME BLOCK THEN
+		// USE DYNAMIC EVENT LISTNER FOR BLOCK MIDDLEWARE/BLOCK FLOW HOOK
+		blogFormBlock.hook_reg({
+			'after-render-before-callback' : function(){ 
+				SCOPE._el("[name=blog_form]")
+					.create("button","Back","btn_back","btn_back",["btn btn-info float-right"],[],[
+						{key : 'type', val: 'button'}
+					])
+					.dynamic("click", function(ev, ele, parent){
+						State.goto("/blogs");
+					});
+			}
+		});
+		
 		blogFormBlock.empty();
 		blogFormBlock.templateRaw(SCOPE.views['blog_form_template']);
 		blogFormBlock.assign('form-alert-msg-display','d-none');
 		blogFormBlock.render();
-
+		
 		/* blog list */
 		_blogList(SCOPE);
-
+		
 		
 		/* Change form ID */
 		SCOPE._el("[name=blog_form]").get().setAttribute("id","blogUpdateForm");
@@ -326,6 +343,38 @@ export function CRUD(){
 			});
 			formValidation.run(function(isInvalid, formBlock, formSubmitData, formEle){ 
 				SCOPE._el(formEle).find("button[type=submit]").get().removeAttribute("disabled");
+				// register hook in render
+				// IF THERE ARE OTHER REPLACEMENTS OF HTML INSIDE THE SAME BLOCK THEN
+				// USE DYNAMIC EVENT LISTNER FOR BLOCK MIDDLEWARE/BLOCK FLOW HOOK
+				formBlock.hook_reg({
+					'after-render-before-callback' : function(){ 
+						// generate back to blog list redirect button
+						SCOPE._el("[name=blog_form]")
+							.create("button","Back","btn_back","btn_back",["btn btn-info float-right"],[],[
+								{key : 'type', val: 'button'}
+							])
+							.dynamic("click", function(ev, ele, parent){
+								State.goto("/blogs");
+							}); 
+							
+						// generate form alert close function 
+						SCOPE._el("#alert").create(
+							"button", 
+							'<span aria-hidden="true">×</span>',
+							"form_alert_close",
+							"form_alert_close",
+							['close'],
+							[],
+							[
+								{key : 'type', val : "button"},
+								//{key : "data-dismiss", val : "alert"},
+								//{key : "aria-label", val : "Close"}
+							]
+						).dynamic("click", function(ev, el_sel, parent_sel){ _l(parent_sel);
+							SCOPE._el("#alert").delete();
+						});
+					}
+				});
 				// check for validation 
 				if(isInvalid){
 					// set Block template 
@@ -533,15 +582,25 @@ function _blogList(instance){
 	if(!archives.isEmpty()){
 		/* Register a hook in cycle */
 		blogListBlock.hook_reg({
-			'before-append-in-cycle' : function(val){ 
+			'before-append-in-cycle' : function(val, next){ 
 				blogListBlock.assign('edit_blog_btn','editBlogBtn'+val['_key']);
 				blogListBlock.assign('edit_link','/blog/edit/'+val['_key']);
 				blogListBlock.assign('delete_blog_btn','deleteBlogBtn'+val['_key']);
 				blogListBlock.assign('delete_link_with_msg', ["Do you really wish to delete?", "/blog/delete/"+val['_key']]); 
 				blogListBlock.assign('img','<img alt="image" class="img-thumbnail" src="'+val['file']+'" />');
+				if(next) next(this);
 			}
 		});
-		
+		/* Register a middleware in cycle */
+		/* blogListBlock.middleware('before-append-in-cycle', function(val, next){ 
+			blogListBlock.assign('edit_blog_btn','editBlogBtn'+val['_key']);
+			blogListBlock.assign('edit_link','/blog/edit/'+val['_key']);
+			blogListBlock.assign('delete_blog_btn','deleteBlogBtn'+val['_key']);
+			blogListBlock.assign('delete_link_with_msg', ["Do you really wish to delete?", "/blog/delete/"+val['_key']]); 
+			blogListBlock.assign('img','<img alt="image" class="img-thumbnail" src="'+val['file']+'" />');
+			if(next) next(this);
+		}); */
+	
 		/* manage event into the block */
 		blogListBlock.cycle(archives, function(blockEl){
 			/* After listing blog, listen to click function */

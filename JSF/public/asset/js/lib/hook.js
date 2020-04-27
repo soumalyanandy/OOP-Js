@@ -21,8 +21,8 @@ export function hook(debug = false){
         }
     }
 
-    hook.prototype.call = function(type, key, data){
-        return _call_hook(this, type, key, data);
+    hook.prototype.call = function(type, key, data, classObject, callBack = false){
+        return _call_hook(this, type, key, data, classObject, callBack);
     }
     return this;
 }
@@ -38,18 +38,20 @@ function _hooks(instance, type, hook = {}){
     instance.hooks[type].push(hook);
 }
 
-function _call_hook(instance, type, key, val = ''){
+function _call_hook(instance, type, key, val = '', classObject, callBack){
     if(typeof instance.hooks[type] !== "undefined"){
         for (var i=0; i < instance.hooks[type].length; i++) {
             var hook = instance.hooks[type][i];
             if(hook.hasOwnProperty(key)){ 
                 if(typeof hook[key] === 'function'){
                     if(instance.debug) _l(key+" hook called from "+type);
-                    return hook[key].apply({}, [val]);
+                    hook[key].apply(classObject, [val, callBack]);
+                    return true;
                 }
             }
         }
     }
+    return false;
 }
 
 export var Hook = new hook();

@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev-with-no-config": "webpack public/asset/js/blog.js --output dist/main.js --mode development",
     "build-with-no-config": "webpack public/asset/js/blog.js --output dist/bundle.js --mode production",
-    "dev" : "webpack --config webpack.config.js"
+    "dev": "webpack --config webpack.config.js",
+    "use-jquery" : "rm -rf public/jquery|mkdir -p public/jquery|cp -R node_modules/jquery/dist public/jquery",
+    "use-bootstrap" : "rm -rf public/bootstrap|mkdir -p public/bootstrap|cp -R node_modules/bootstrap/dist public/bootstrap"
   },
   "keywords": [
     "es5",
@@ -19,5 +21,8 @@
   "devDependencies": {
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"
+  },
+  "dependencies": {
+    "jquery": "^3.5.0"
   }
 }
