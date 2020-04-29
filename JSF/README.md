@@ -47,7 +47,7 @@ Limitations :
 --------------
 1. Try to write less code in the event-Listner/action-Listner callBack function to escape browser warnings and faster execution. We can use to bind one event and one listner per element without error. We can set dynamic or static event with the element.
 2. Only class based css will be accepted. We will not have to write same properties more than once. We can define a class for each property or set of properties and then call that class under another class. Nested classes are also accepted.
-3. Must refresh event listners with el.refreshListeners() to set controls with modified elements(if any changes happend after Block render) in the document. We use ',' as a separator for action attribute parameters/values which may collapsed with text comma and will be treated as another parameter. - Will fix that in upcomming releases
+3. Must refresh event listners with el.refreshListeners() to set controls with modified elements(if any changes happend after Block render) in the document. We use ',' as a separator for action attribute parameters/values which may collapsed with text comma and will be treated as another parameter. - Will fix that in upcomming releases. 
 4. We use hash as a application navigation or as redirection to different section. Framework will have option to redirect with 'push state'. - Will be available in upcomming releases
 5. Final release - Done
 6. To add new settings or custom module library or helper use webpack import function. - Will be easy in upcomming release 
@@ -55,6 +55,7 @@ Limitations :
 8. For data class current database is 'localStorage'. - Driver feature will be available in upcomming releases
 9. Only 'required' validation is there. - Will add custom validation functions and rules in future release
 10. Very propular functions are included. - Will add more in future release
+Note : If we create any element after render block and bind any event to it then we must need to remember that event will be keep binded for the current html. If we change any attribute of the element or we replace the element or any other html of element's parent then that element event will not work but keep as binded. Because previous document has been expired and previous event bind selector was not matched with any of the current element. Window Object always update itself with the current document state in real time. So we must keep track of any new changes into the document or area of the document. So to keep current functionality in working condition we need to rebind the old listeners with the new html elements. And to do that we must call el().refreshListeners() after any html element attribute change or any other html change with in Block area. That function will rebind the elements with events and its listners. 
 
 Technologies: 
 --------------
