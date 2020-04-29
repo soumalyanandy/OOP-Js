@@ -56,6 +56,12 @@ Limitations :
 9. Only 'required' validation is there. - Will add custom validation functions and rules in future release
 10. Very propular functions are included. - Will add more in future release
 
+Note :
+------
+1. If we create any element after render block and bind any event to it then we must need to remember that event will be keep binded for the current html. If we change any attribute of the element or we replace the element or any other html of element's parent then that element event will not work but keep as binded. Because previous document has been expired and previous event bind selector was not matched with any of the current element. Window Object always update itself with the current document state in real time. So we must keep track of any new changes into the document or area of the document. So to keep current functionality in working condition we need to rebind the old listeners with the new html elements. And to do that we must call el().refreshListeners() after any html element attribute change or any other html change with in Block area. That function will rebind the elements with events and its listners. 
+
+2. While bind event to any element one thing keep in mind that if html changes for that element or in the element's parent then we need to use dynamic() else if html will not changes before redirect we can use on().This methods actually registered events to the specific element. dynamic() will rebind function if the document state changes and on() bind function which can be use for current document state.
+
 Technologies: 
 --------------
 1. Webpack 4 (node 6.9)
