@@ -23,6 +23,26 @@ if(!NodeList.prototype.toArray) { // check previous existance
     }
 }
 
+/* Element Prototype */
+/*
+    @method : matches
+    @desc : check if current element is given selector or not 
+*/
+if (!Element.prototype.matches) {
+    Element.prototype.matches = 
+        Element.prototype.matchesSelector || 
+        Element.prototype.mozMatchesSelector ||
+        Element.prototype.msMatchesSelector || 
+        Element.prototype.oMatchesSelector || 
+        Element.prototype.webkitMatchesSelector ||
+        function(s) {
+          var matches = (this.document || this.ownerDocument).querySelectorAll(s),
+              i = matches.length;
+          while (--i >= 0 && matches.item(i) !== this) {}
+          return i > -1;            
+        };
+  }
+
 /* Array prototype */
 
 /*
