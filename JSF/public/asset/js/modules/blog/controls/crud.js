@@ -274,8 +274,20 @@ export function CRUD(){
 		/* Change form ID */
 		SCOPE._el("[name=blog_form]").get().setAttribute("id","blogUpdateForm");
 		var formEle = SCOPE._el("[id=blogUpdateForm]","#editBlogBlock").get();
-		//_l("exit element :::::::::::::::::::::::::::::::::::::::::");
+
+		//_l("sibling elements :::::::::::::::::::::::::::::::::::::::::");
+		//_l(SCOPE._el("[id=blogUpdateForm]","#editBlogBlock").nextSiblings().filter('h2'));
+		/* SCOPE._el("[id=blogUpdateForm]","#editBlogBlock").siblings().filter(function(ele){
+			return (ele.tagName.toLowerCase() == "h2")?true:false;
+		}).on("click", function(){
+			alert("hi");
+		}); */
 		//_exit(formEle); 
+		//_l("parent elements :::::::::::::::::::::::::::::::::::::::::");
+		/* _l(SCOPE._el("[id=blogUpdateForm]","#editBlogBlock").parent().filter(function(item){
+			return item.id == ""?true:false;
+		}).getAll()); */
+		//_l(SCOPE._el("[id=blogUpdateForm] #btn_back","#editBlogBlock").hasChild());
 
 		/* set form data */
 		formEle.elements.namedItem("title").value = saveFormData['title'];
@@ -388,11 +400,14 @@ export function CRUD(){
 						/* blog list */
 						_blogList(SCOPE);
 						var formEle = SCOPE._el(blockEle).find("FORM").get();
+
 						/* Change form ID */
 						formEle.setAttribute("id","blogUpdateForm");
+						
 						/* 
 							Must refresh event listner to set controls with 
-							modified elements in the document.
+							modified elements(if any changes happend after Block render) 
+							in the document.
 						*/
 						SCOPE._el().refreshListeners();
 
@@ -439,8 +454,10 @@ export function CRUD(){
 							/* blog list */
 							_blogList(SCOPE);
 							var formEle = SCOPE._el(blockEle).find("FORM").get();
+
 							/* Change form ID */
 							formEle.setAttribute("id","blogUpdateForm");
+
 							/* 
 								Must refresh event listner to set controls with 
 								modified elements in the document.
