@@ -55,7 +55,12 @@ Limitations :
 8. For data class current database is 'localStorage'. - Driver feature will be available in upcomming releases
 9. Only 'required' validation is there. - Will add custom validation functions and rules in future release
 10. Very propular functions are included. - Will add more in future release
-Note : If we create any element after render block and bind any event to it then we must need to remember that event will be keep binded for the current html. If we change any attribute of the element or we replace the element or any other html of element's parent then that element event will not work but keep as binded. Because previous document has been expired and previous event bind selector was not matched with any of the current element. Window Object always update itself with the current document state in real time. So we must keep track of any new changes into the document or area of the document. So to keep current functionality in working condition we need to rebind the old listeners with the new html elements. And to do that we must call el().refreshListeners() after any html element attribute change or any other html change with in Block area. That function will rebind the elements with events and its listners. 
+
+Note :
+------
+1. If we create any element after render block and bind any event to it then we must need to remember that event will be keep binded for the current html. If we change any attribute of the element or we replace the element or any other html of element's parent then that element event will not work but keep as binded. Because previous document has been expired and previous event bind selector was not matched with any of the current element. Window Object always update itself with the current document state in real time. So we must keep track of any new changes into the document or area of the document. So to keep current functionality in working condition we need to rebind the old listeners with the new html elements. And to do that we must call el().refreshListeners() after any html element attribute change or any other html change with in Block area. That function will rebind the elements with events and its listners. 
+
+2. While bind event to any element one thing keep in mind that if html changes for that element or in the element's parent then we need to use dynamic() else if html will not changes before redirect we can use on().This methods actually registered events to the specific element. dynamic() will rebind function if the document state changes and on() bind function which can be use for current document state.
 
 Technologies: 
 --------------
@@ -79,4 +84,6 @@ New Features :
 Date : 22/04/2020
 1. Add element nested to another in chain. Class.Method -> Ele.create(). It will always append new element into parent element and return Element Object as value and change current target to new element. To get element reference we need to call Ele.get() after creation of the element. 
 2. Delete element and respective event functionality.Class.Method -> Ele.delete(). It will delete target element and its related functionality.
-3. Add text/html under block dynamically. Class.Method -> Block.write(). We can append additional html or text into Block when we need by creating new Block Object with the specific Id and then use write(). It uses DIV element as a wrapper of the new text/html.
+3. Add element traverse functions in Element Class. Class.Method -> Ele.parent/hasParent/child/hasChild/prevSiblings/nextSiblings/allSiblings().
+4. Ele.filter() -> to filter element from a set of elements by selector string.
+5. Add text/html under block dynamically. Class.Method -> Block.write(). We can append additional html or text into Block when we need by creating new Block Object with the specific Id and then use write(). It uses DIV element as a wrapper of the new text/html.
