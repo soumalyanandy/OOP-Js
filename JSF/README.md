@@ -82,10 +82,12 @@ Date :  22/04/2020
 New Features : 
 ---------------
 Date : 22/04/2020
+
 1. Add element nested to another in chain. Class.Method -> Ele.create(). It will always append new element into parent element and return Element Object as value and change current target to new element. To get element reference we need to call Ele.get() after creation of the element. 
 2. Delete element and respective event functionality.Class.Method -> Ele.delete(). It will delete target element and its related functionality.
 
 Date : 27/04/2020
+
 3. Add element traverse functions in Element Class. Class.Method -> Ele.parent/hasParent/child/hasChild/prevSiblings/nextSiblings/allSiblings().
 4. Ele.filter() -> to filter element from a set of elements by selector string.
 5. Add text/html under block dynamically. Class.Method -> Block.write(). We can append additional html or text into Block when we need by creating new Block Object with the specific Id and then use write(). It uses DIV element as a wrapper of the new text/html.
