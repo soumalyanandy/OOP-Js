@@ -195,7 +195,8 @@ Ele.prototype.delete = function(){
     var el = this.get();
     //_l(this.target);
     // remove listner
-    _detachCurrentListeners(false, el.tagName+"#"+el.id);
+    //_detachCurrentListeners(false, el.tagName+"#"+el.id);
+    _detachCurrentListeners(el);
     // set parent as current target and return
     var parent = this.end();
     // remove element
@@ -644,8 +645,16 @@ Ele.prototype.dynamic = function(){ //_l(this.selectors);
 }
 
 Ele.prototype.refreshListeners = function(){
-    _detachCurrentListeners(true);
-    _attachLastListeners(true);
+    var elArr = this.getAll(); 
+    elArr.forEach(function(ele, i){
+        _detachCurrentListeners(ele);
+        _attachLastListeners(ele);
+    });
+}
+
+Ele.prototype.refreshAllListeners = function(){
+    _detachCurrentListeners();
+    _attachLastListeners();
 }
 
 Ele.prototype.detachCurrentListeners = function(){
@@ -702,7 +711,7 @@ function _filter(elArr, sel = false, callBack = false){
         if(sel == false || sel == null || sel == "") throw new Error('Selector can not be blank at ele.filter() function.');
         elArr.forEach(function(val, i){
             if((val && val.matches(sel))) result.push(val);
-        })
+        });
         //return (ele && ele.matches(sel))?true:false;
     } else {
         if(typeof callBack !== "function") throw new Error('callBack must be of type function at ele.filter() function.');
@@ -734,24 +743,28 @@ function _nestedChild(el, sel){
     } else return null;
 }
 
-function _detachCurrentListeners(tracking = false, ele = false){ //_w("_detachListeners");
+//function _detachCurrentListeners(tracking = false, ele = false){ //_w("_detachListeners");
+function _detachCurrentListeners(ele = false){
 	for(var parent in window.elementSelectors){
 		if(window.elementSelectors.hasOwnProperty(parent)){
 			window.elementSelectors[parent].forEach(function(eleObj, i){
                 var selector = eleObj.sel;
                 selector = Helper.rtrim(selector,"#");
                 //_l("del listener from element : "+selector);
-                if(!ele || ele == selector){
+                //if(!ele || ele == selector){
+                if(!ele || ele.matches(selector)){
+                    //if(ele && ele.matches(selector)) _l("del listener from element : "+selector);
                     var events = window.EventObserve[selector];
                     var target = document.querySelector(selector);
                     //_l("target : ");
-                    //_l(target);
+                    //if(ele && ele.matches(selector)) _l(target);
                     if(target != null && typeof events !== "undefined"){
                         events.forEach(function(obj, j){
                             (target.removeEventListener)?target.removeEventListener(obj.evt, obj.callBack, obj.capture) : target.detachEvent(obj.evt, obj.callBack, obj.capture);
                         });
                     } //_l(eleObj.dynamic); _l(window.elementSelectors[parent][i]);
-                    if((!eleObj.dynamic && !tracking) || ele == selector){	
+                    //if((!eleObj.dynamic && !tracking) || ele == selector){	
+                    if(!eleObj.dynamic){	
                         delete window.EventObserve[selector];
                         window.elementSelectors[parent].remove(i); 
                     }
@@ -761,20 +774,22 @@ function _detachCurrentListeners(tracking = false, ele = false){ //_w("_detachLi
 	}
 }
 
-function _attachLastListeners(tracking = false){ //_w("_attachListeners"); 
+//function _attachLastListeners(tracking = false){ //_w("_attachListeners"); 
+function _attachLastListeners(ele = false){
     //_l(window.elementSelectors); _l(window.EventObserve);
 	for(var parent in window.elementSelectors){
 		if(window.elementSelectors.hasOwnProperty(parent)){
 			window.elementSelectors[parent].forEach(function(eleObj, i){
-                if((eleObj.dynamic && !tracking) || tracking){
-                    var selector = eleObj.sel;
-                    selector = Helper.rtrim(selector,"#");
+                var selector = eleObj.sel;
+                selector = Helper.rtrim(selector,"#");
+                //if((eleObj.dynamic && !tracking) || tracking){
+                if(eleObj.dynamic || (ele && ele.matches(selector))){
 					//_l(typeof selector);
-					//_l("add listener to element : "+selector);
+					//if(ele && ele.matches(selector)) _l("add listener to element : "+selector);
 					var events = window.EventObserve[selector];
 					var target = document.querySelector(selector);
 					//_l("target : ");
-                    //_l(target);
+                    //if(ele && ele.matches(selector)) _l(target);
 					if(target != null && typeof events !== "undefined"){
 						events.forEach(function(obj, j){
 							(target.addEventListener)?target.addEventListener(obj.evt, obj.callBack, obj.capture) : target.attachEvent(obj.evt, obj.callBack, obj.capture);
