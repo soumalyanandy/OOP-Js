@@ -58,9 +58,11 @@ Limitations :
 
 Note :
 ------
-1. If we create any element after render block and bind any event to it then we must need to remember that event will be keep binded for the current html. If we change any attribute of the element or we replace the element or any other html of element's parent then that element event will not work but keep as binded. Because previous document has been expired and previous event bind selector was not matched with any of the current element. Window Object always update itself with the current document state in real time. So we must keep track of any new changes into the document or area of the document. So to keep current functionality in working condition we need to rebind the old listeners with the new html elements. And to do that we must call el().refreshListeners() after any html element attribute change or any other html change with in Block area. That function will rebind the elements with events and its listners. 
+1. If we create any element after render block and bind any event to it then we must need to remember that event will be keep binded for the current html. If we change any attribute of the element or we replace the element or any other html of element's parent then that element event will not work but keep as binded. Because previous document has been expired and previous event bind selector was not matched with any of the current element. Window Object always update itself with the current document state in real time. So we must keep track of any new changes into the document or area of the document. So to keep current functionality in working condition(after any html element attribute change or any other html change with in Block area) we need to rebind the old listeners with the new html elements. And after that we must call el().refreshAllListeners(). That function will rebind the elements with pre existing events and its listners. 
 
-2. While bind event to any element one thing keep in mind that if html changes for that element or in the element's parent then we need to use dynamic() else if html will not changes before redirect we can use on().This methods actually registered events to the specific element. dynamic() will rebind function if the document state changes and on() bind function which can be use for current document state.
+2. While bind event to any element one thing keep in mind that if html changes for that element or in the element's parent then we need to use dynamic() else if html will not changes before redirect we can use on().This methods actually registered events to the specific element. dynamic() will rebind function if the document state changes and on() bind function which can be use for current document state only.
+
+3. If you change attributes of any element which had events binded to it then it will not work. Because if you change any attribute of an element then element state will changes and we need to rebind the pre existing events to the element to get the job done.We can do so by el(selector).refreshListeners(). eg. SCOPE._el(blockEle).find("FORM").refreshListeners();
 
 Technologies: 
 --------------
@@ -79,6 +81,9 @@ Date :  22/04/2020
 1. Fix 404 error not display bug. 
 2. Remove excess code.
 
+Date : 30/04/2020
+1. Fix the logic removeLastListeners and addExistsListeners functionality. From now it they will not keep track from on() events. on() events will only valid from current document state.
+
 New Features : 
 ---------------
 Date : 22/04/2020
@@ -91,3 +96,7 @@ Date : 27/04/2020
 3. Add element traverse functions in Element Class. Class.Method -> Ele.parent/hasParent/child/hasChild/prevSiblings/nextSiblings/allSiblings().
 4. Ele.filter() -> to filter element from a set of elements by selector string.
 5. Add text/html under block dynamically. Class.Method -> Block.write(). We can append additional html or text into Block when we need by creating new Block Object with the specific Id and then use write(). It uses DIV element as a wrapper of the new text/html.
+
+Date : 30/04/2020
+
+6. Add new Class.Method -> el().refreshAllListeners() -> it will reset pre existing events with there respective listeners for all elements in the document, and el(selector).refreshListeners() -> it will reset the events with respective listeners to the specific element.
