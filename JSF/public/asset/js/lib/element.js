@@ -165,192 +165,6 @@ Ele.prototype.find = function(selector){
     return this;
 }
 
-Ele.prototype.create = function(tag, text = "", id = "", name = "", classes = [], style = [], attr = []){
-    //return doc.createElement(tag.toUpperCase());
-    if(id == null || id == ""){
-        throw new Error('Id can not be blank at ele.create() function.');
-    }
-    var element = doc.createElement(tag.toUpperCase());
-    element.id = id;
-	if(text != "") element.innerHTML = text;
-	if(name != "") element.name = name;
-	if(classes.length > 0) element.className = classes.join(" ");
-	// add styles
-	style.forEach(function(obj, key){ 
-		element.style[obj.key] = obj.val;
-	});
-	// add attributes 
-	attr.forEach(function(obj, key){
-		element.setAttribute(obj.key, obj.val);
-    }); 
-    //_l('Created element : ');
-    //_l(element);
-	// append to parent
-    this.get().appendChild(element);
-    // set element as current target and return class reference
-    return el("#"+id); //.get()
-}
-
-Ele.prototype.delete = function(){
-    var el = this.get();
-    //_l(this.target);
-    // remove listner
-    //_detachCurrentListeners(false, el.tagName+"#"+el.id);
-    _detachCurrentListeners(el);
-    // set parent as current target and return
-    var parent = this.end();
-    // remove element
-    el.remove();
-    // return class reference
-    return parent;
-}
-
-Ele.prototype.end = function(){
-    //var el = this.get();
-    // get parent 
-    //var parent = el.parentElement;
-    // set parent as current target and return class reference
-    return this.closest('parent'); //el(parent.tagName+"#"+parent.id);
-}
-
-Ele.prototype.parent = function(selector = false, ifExistsFlag = false){
-    var el = this.get();
-    // get expected parent 
-    var parent, selector;
-    var exists = false;
-    // if selector exists
-    if(selector){
-        // traverse parents
-        while (el) {
-            // get parent element
-            parent = el.parentElement;
-            // if current parent matches the expected
-            if (parent && parent.matches(selector)) {
-                exists = true;
-                if(parent.id) selector = parent.tagName+"#"+parent.id;
-                else if(parent.className) selector = parent.tagName+"."+parent.className.split(" ").join(".");
-                else selector = parent.tagName;
-                this.set(selector);
-                return !ifExistsFlag?this:exists;
-            }
-            // reset element with new parent
-            el = parent;
-        }
-    } else if(el.parentElement){
-        exists = true;
-        // will return the immidiate one
-        parent = el.parentElement;
-        if(parent.id) selector = parent.tagName+"#"+parent.id;
-        else if(parent.className) selector = parent.tagName+"."+parent.className.split(" ").join(".");
-        else selector = parent.tagName;
-        this.set(selector);
-        return !ifExistsFlag?this:exists;
-    }
-    // did not find one
-    _l("did not find any parent");
-    return !ifExistsFlag?this.end():exists;
-}
-
-Ele.prototype.hasParent = function(selector = false){
-    return this.parent(selector, true)?true:false;
-}
-
-Ele.prototype.closest = function(type = 'parent', selector = false){
-    if(type == 'parent'){
-        return this.parent(selector);
-    } else {
-        return this.child(selector);
-    }
-}
-
-Ele.prototype.child = function(selector = false, ifExistsFlag = false){
-    var el = this.get();
-    // get expected child 
-    var child;
-    var exists = false;
-    // if selector exists
-    if(selector){
-        // traverse childs
-        child = _nestedChild(el, selector);
-        if(child != null){ 
-            exists = true;
-            this.set(child);
-            return !ifExistsFlag?this:exists;
-        }
-    } else if(el.children.length > 0){
-        exists = true;
-        // will return the immidiate level children
-        this.target = el.children;
-        return !ifExistsFlag?this:exists;
-    }
-    
-    // did not find one
-    _l("did not find any child");
-    return !ifExistsFlag?this.end():exists;
-}
-
-Ele.prototype.hasChild = function(selector = false){
-    return this.child(selector, true)?true:false;
-}
-
-/* get Previous Siblings */
-Ele.prototype.prevSiblings = function(sel = false) {
-    var ele = this.get();
-    if(typeof ele === "undefined") throw new Error("Element not found in ele.prevSiblings()");
-    var sibs = [];
-    var elem;
-    while (!sibs.hasItem(ele.previousElementSibling)) {
-        elem = ele.previousElementSibling
-        if(sel && elem.matches(sel)) sibs.push(elem);
-        else if(!sel) sibs.push(elem);
-    }
-    // set target
-    this.target = sibs;
-    return this;
-}
-
-/* get Next Siblings */
-Ele.prototype.nextSiblings = function(sel = false) {
-    var ele = this.get();
-    if(typeof ele === "undefined") throw new Error("Element not found in ele.nextSiblings()");
-    var sibs = [];
-    var elem;
-    while (elem = ele.nextElementSibling) {
-        if(sel && elem.matches(sel)) sibs.push(elem);
-        else if(!sel) sibs.push(elem);
-    }
-    // set target
-    this.target = sibs;
-    return this;
-}
-
-/* get All Siblings */
-Ele.prototype.siblings = function(sel = false) {
-    var ele = this.get();
-    if(typeof ele === "undefined") throw new Error("Element not found in ele.siblings()");
-    var sibs = [];
-    var elem = ele.parentElement.firstElementChild;
-    do {
-        //if (elem.nodeType === 3) continue; // text node
-        //if (!filter || filter(elem)) sibs.push(elem);
-        if(sel && elem.matches(sel)) sibs.push(elem);
-        else if(!sel) sibs.push(elem);
-    } while (elem = elem.nextElementSibling)
-    // set target
-    this.target = sibs;
-    return this;
-}
-
-Ele.prototype.filter = function(str){
-    var elArr = this.getAll();
-    if(typeof str !== "function"){
-        this.target = _filter(elArr, str);
-    } else {
-        this.target = _filter(elArr, false, str);
-    }
-    return this;
-}
-
 Ele.prototype.reg_action = function(action, listner){
     if(!this.actions.hasItem(action)){
         this.actions.push(action);
@@ -705,45 +519,7 @@ Ele.prototype.isElement = function(o){
 }
 
 /* Abstruction */
-function _filter(elArr, sel = false, callBack = false){
-    var result = [];
-    if(!callBack){
-        if(sel == false || sel == null || sel == "") throw new Error('Selector can not be blank at ele.filter() function.');
-        elArr.forEach(function(val, i){
-            if((val && val.matches(sel))) result.push(val);
-        });
-        //return (ele && ele.matches(sel))?true:false;
-    } else {
-        if(typeof callBack !== "function") throw new Error('callBack must be of type function at ele.filter() function.');
-        //return callBack(ele);
-        elArr.forEach(function(val, i){
-            if(callBack(val)) result.push(val);
-        });
-    }
-    return result;
-}
 
-function _nestedChild(el, sel){
-    var child, selector;
-    var nestedChild;
-    if(el.children.length > 0){
-        for (let i = 0; i < el.children.length; i++) {
-            //console.log(el.children[i].tagName);
-            child = el.children[i];
-            // if current child matches the expected
-            if (child && child.matches(sel)) {
-                if(child.id) selector = child.tagName+"#"+child.id;
-                else if(child.className) selector = child.tagName+"."+child.className.split(" ").join(".");
-                else selector = child.tagName;
-                return selector;
-            } else if((nestedChild = _nestedChild(child, sel)) != null){
-                return nestedChild;
-            }
-        }
-    } else return null;
-}
-
-//function _detachCurrentListeners(tracking = false, ele = false){ //_w("_detachListeners");
 function _detachCurrentListeners(ele = false){
 	for(var parent in window.elementSelectors){
 		if(window.elementSelectors.hasOwnProperty(parent)){
@@ -763,7 +539,7 @@ function _detachCurrentListeners(ele = false){
                             (target.removeEventListener)?target.removeEventListener(obj.evt, obj.callBack, obj.capture) : target.detachEvent(obj.evt, obj.callBack, obj.capture);
                         });
                     } //_l(eleObj.dynamic); _l(window.elementSelectors[parent][i]);
-                    //if((!eleObj.dynamic && !tracking) || ele == selector){	
+                    	
                     if(!eleObj.dynamic){	
                         delete window.EventObserve[selector];
                         window.elementSelectors[parent].remove(i); 
@@ -774,7 +550,6 @@ function _detachCurrentListeners(ele = false){
 	}
 }
 
-//function _attachLastListeners(tracking = false){ //_w("_attachListeners"); 
 function _attachLastListeners(ele = false){
     //_l(window.elementSelectors); _l(window.EventObserve);
 	for(var parent in window.elementSelectors){
@@ -782,14 +557,14 @@ function _attachLastListeners(ele = false){
 			window.elementSelectors[parent].forEach(function(eleObj, i){
                 var selector = eleObj.sel;
                 selector = Helper.rtrim(selector,"#");
-                //if((eleObj.dynamic && !tracking) || tracking){
+                
                 if(eleObj.dynamic || (ele && ele.matches(selector))){
 					//_l(typeof selector);
 					//if(ele && ele.matches(selector)) _l("add listener to element : "+selector);
 					var events = window.EventObserve[selector];
 					var target = document.querySelector(selector);
 					//_l("target : ");
-                    //if(ele && ele.matches(selector)) _l(target);
+
 					if(target != null && typeof events !== "undefined"){
 						events.forEach(function(obj, j){
 							(target.addEventListener)?target.addEventListener(obj.evt, obj.callBack, obj.capture) : target.attachEvent(obj.evt, obj.callBack, obj.capture);
