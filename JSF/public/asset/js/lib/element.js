@@ -31,8 +31,16 @@ const EVENTS = {
 	'DOM_MODIFY' : 'DOMSubtreeModified', // For Developer : It may cause infinit loop written in MDN. 
 	'CHANGE' : 'change',
     'CLICK' : 'click',
+    'BLUR' : 'blur',
+    'FOCUS' : 'focus',
     'SUBMIT' : 'submit',
-    'KEYUP' : 'keyup'
+    'KEYUP' : 'keyup',
+    'KEYDOWN' : 'keydown',
+    'KEYPRESS' : 'keypress',
+    'MOUSEOVER' : 'mouseover',
+    'MOUSEOUT' : 'mouseout',
+    'MOUSEENTER' : 'mouseenter',
+    'MOUSELEAVE' : 'mouseleave',
 }
 
 /* Wrapper */
@@ -84,14 +92,14 @@ Ele.prototype.set = function(selector, parent = null){
     this.parent_sel = null;
    
     //parent 
-    this.parent = (parent == null)?doc:doc.querySelector(parent);
-    this.parent = (selector == 'window')?system:this.parent;
-    if(this.parent == system){
+    this.parentOfTarget = (parent == null)?doc:doc.querySelector(parent);
+    this.parentOfTarget = (selector == 'window')?system:this.parentOfTarget;
+    if(this.parentOfTarget == system){
         this.parent_sel = 'win'; 
-    } else if(this.parent == doc){
+    } else if(this.parentOfTarget == doc){
         this.parent_sel = 'doc'; 
     } else {
-        this.parent_sel = this.parent.tagName+"#"+this.parent.id;
+        this.parent_sel = this.parentOfTarget.tagName+"#"+this.parentOfTarget.id;
     }
     // check for element type
     if(this.isElement(selector)){
@@ -103,7 +111,7 @@ Ele.prototype.set = function(selector, parent = null){
         }
     } else {
         var query_selector = (parent == null)?selector:parent+' '+selector; //_l(query_selector);
-        this.target = this.elements[this.parent_sel] = (this.parent).querySelectorAll(query_selector).toArray(); //Array.prototype.slice.call((this.parent).querySelectorAll(parent+selector));
+        this.target = this.elements[this.parent_sel] = (this.parentOfTarget).querySelectorAll(query_selector).toArray(); //Array.prototype.slice.call((this.parentOfTarget).querySelectorAll(parent+selector));
     }
     //_l(this.target);
     var THIS = this;
@@ -122,10 +130,10 @@ Ele.prototype.set = function(selector, parent = null){
             });
         }
     }
-    //_l('------- ELEMENT ------');
-    //_l(window.elementSelectors);
-    //_l('------- OBSERVE ------');
-    //_l(window.EventObserve);
+    /* _l('------- ELEMENT ------');
+    _l(window.elementSelectors);
+    _l('------- OBSERVE ------');
+    _l(window.EventObserve); */
 }
 
 Ele.prototype.selectorExists = function(arr, sel){
@@ -154,6 +162,192 @@ Ele.prototype.getAll = function(id = null){
 
 Ele.prototype.find = function(selector){
     this.target = (this.get()).querySelectorAll(selector).toArray(); //Array.prototype.slice.call((this.get()).querySelectorAll(selector));
+    return this;
+}
+
+Ele.prototype.create = function(tag, text = "", id = "", name = "", classes = [], style = [], attr = []){
+    //return doc.createElement(tag.toUpperCase());
+    if(id == null || id == ""){
+        throw new Error('Id can not be blank at ele.create() function.');
+    }
+    var element = doc.createElement(tag.toUpperCase());
+    element.id = id;
+	if(text != "") element.innerHTML = text;
+	if(name != "") element.name = name;
+	if(classes.length > 0) element.className = classes.join(" ");
+	// add styles
+	style.forEach(function(obj, key){ 
+		element.style[obj.key] = obj.val;
+	});
+	// add attributes 
+	attr.forEach(function(obj, key){
+		element.setAttribute(obj.key, obj.val);
+    }); 
+    //_l('Created element : ');
+    //_l(element);
+	// append to parent
+    this.get().appendChild(element);
+    // set element as current target and return class reference
+    return el("#"+id); //.get()
+}
+
+Ele.prototype.delete = function(){
+    var el = this.get();
+    //_l(this.target);
+    // remove listner
+    //_detachCurrentListeners(false, el.tagName+"#"+el.id);
+    _detachCurrentListeners(el);
+    // set parent as current target and return
+    var parent = this.end();
+    // remove element
+    el.remove();
+    // return class reference
+    return parent;
+}
+
+Ele.prototype.end = function(){
+    //var el = this.get();
+    // get parent 
+    //var parent = el.parentElement;
+    // set parent as current target and return class reference
+    return this.closest('parent'); //el(parent.tagName+"#"+parent.id);
+}
+
+Ele.prototype.parent = function(selector = false, ifExistsFlag = false){
+    var el = this.get();
+    // get expected parent 
+    var parent, selector;
+    var exists = false;
+    // if selector exists
+    if(selector){
+        // traverse parents
+        while (el) {
+            // get parent element
+            parent = el.parentElement;
+            // if current parent matches the expected
+            if (parent && parent.matches(selector)) {
+                exists = true;
+                if(parent.id) selector = parent.tagName+"#"+parent.id;
+                else if(parent.className) selector = parent.tagName+"."+parent.className.split(" ").join(".");
+                else selector = parent.tagName;
+                this.set(selector);
+                return !ifExistsFlag?this:exists;
+            }
+            // reset element with new parent
+            el = parent;
+        }
+    } else if(el.parentElement){
+        exists = true;
+        // will return the immidiate one
+        parent = el.parentElement;
+        if(parent.id) selector = parent.tagName+"#"+parent.id;
+        else if(parent.className) selector = parent.tagName+"."+parent.className.split(" ").join(".");
+        else selector = parent.tagName;
+        this.set(selector);
+        return !ifExistsFlag?this:exists;
+    }
+    // did not find one
+    _l("did not find any parent");
+    return !ifExistsFlag?this.end():exists;
+}
+
+Ele.prototype.hasParent = function(selector = false){
+    return this.parent(selector, true)?true:false;
+}
+
+Ele.prototype.closest = function(type = 'parent', selector = false){
+    if(type == 'parent'){
+        return this.parent(selector);
+    } else {
+        return this.child(selector);
+    }
+}
+
+Ele.prototype.child = function(selector = false, ifExistsFlag = false){
+    var el = this.get();
+    // get expected child 
+    var child;
+    var exists = false;
+    // if selector exists
+    if(selector){
+        // traverse childs
+        child = _nestedChild(el, selector);
+        if(child != null){ 
+            exists = true;
+            this.set(child);
+            return !ifExistsFlag?this:exists;
+        }
+    } else if(el.children.length > 0){
+        exists = true;
+        // will return the immidiate level children
+        this.target = el.children;
+        return !ifExistsFlag?this:exists;
+    }
+    
+    // did not find one
+    _l("did not find any child");
+    return !ifExistsFlag?this.end():exists;
+}
+
+Ele.prototype.hasChild = function(selector = false){
+    return this.child(selector, true)?true:false;
+}
+
+/* get Previous Siblings */
+Ele.prototype.prevSiblings = function(sel = false) {
+    var ele = this.get();
+    if(typeof ele === "undefined") throw new Error("Element not found in ele.prevSiblings()");
+    var sibs = [];
+    var elem;
+    while (!sibs.hasItem(ele.previousElementSibling)) {
+        elem = ele.previousElementSibling
+        if(sel && elem.matches(sel)) sibs.push(elem);
+        else if(!sel) sibs.push(elem);
+    }
+    // set target
+    this.target = sibs;
+    return this;
+}
+
+/* get Next Siblings */
+Ele.prototype.nextSiblings = function(sel = false) {
+    var ele = this.get();
+    if(typeof ele === "undefined") throw new Error("Element not found in ele.nextSiblings()");
+    var sibs = [];
+    var elem;
+    while (elem = ele.nextElementSibling) {
+        if(sel && elem.matches(sel)) sibs.push(elem);
+        else if(!sel) sibs.push(elem);
+    }
+    // set target
+    this.target = sibs;
+    return this;
+}
+
+/* get All Siblings */
+Ele.prototype.siblings = function(sel = false) {
+    var ele = this.get();
+    if(typeof ele === "undefined") throw new Error("Element not found in ele.siblings()");
+    var sibs = [];
+    var elem = ele.parentElement.firstElementChild;
+    do {
+        //if (elem.nodeType === 3) continue; // text node
+        //if (!filter || filter(elem)) sibs.push(elem);
+        if(sel && elem.matches(sel)) sibs.push(elem);
+        else if(!sel) sibs.push(elem);
+    } while (elem = elem.nextElementSibling)
+    // set target
+    this.target = sibs;
+    return this;
+}
+
+Ele.prototype.filter = function(str){
+    var elArr = this.getAll();
+    if(typeof str !== "function"){
+        this.target = _filter(elArr, str);
+    } else {
+        this.target = _filter(elArr, false, str);
+    }
     return this;
 }
 
@@ -208,7 +402,7 @@ Ele.prototype.observe = function(){
 Ele.prototype.on = function(){
     var args = Helper.collection(arguments); // Array like object OR Collection
     var SELECTORS = this.selectors;
-    var PARENT = this.parent;
+    var PARENT = this.parentOfTarget;
     var THIS = this;
    
     try{
@@ -253,7 +447,7 @@ Ele.prototype.on = function(){
         /* var event = (typeof args[0] === 'function')?EVENTS.DOM_MODIFY:args[0].toUpperCase();
         var module = (args[1] instanceof Array)?args[1]:[];
         var callback = (typeof args[2] === 'function')?args[2]:function(){}; */
-
+        
         if(this.target instanceof Window){
             var Handler = function(){
                 var e = Helper.collection(arguments);
@@ -262,7 +456,7 @@ Ele.prototype.on = function(){
                 e.stopImmediatePropagation();
                 var element = e.target;
                 var selector = element.tagName+"#"+element.id;
-                var parent_selector = (THIS.parent !== doc)?THIS.parent.tagName+"#"+THIS.parent.id:doc; 
+                var parent_selector = (THIS.parentOfTarget !== doc)?THIS.parentOfTarget.tagName+"#"+THIS.parentOfTarget.id:doc; 
                 //_w("Event : "+(EVENTS[event] || EVENTS.DOM_MODIFY));
                 //_w("Element : "+e.target);
                 State.listen();
@@ -272,7 +466,8 @@ Ele.prototype.on = function(){
                     callback.apply({},[e, selector, parent_selector, args.slice(2)]); //, el
                 }
             }
-            this.eventListener(EVENTS[event], Handler);
+            if(typeof EVENTS[event] !== "undefined") this.eventListener(EVENTS[event], Handler);
+            else _l(event+" is currently not supported");
         } else { //_l("ON method target list : "); _l(this.target);
             (this.target).forEach(function(ele, i){ 
                 var Handler = function(){
@@ -282,7 +477,7 @@ Ele.prototype.on = function(){
                     e.stopImmediatePropagation();
                     var element = e.target;
                     var selector = element.tagName+"#"+element.id;
-                    var parent_selector = (THIS.parent !== doc)?THIS.parent.tagName+"#"+THIS.parent.id:doc; 
+                    var parent_selector = (THIS.parentOfTarget !== doc)?THIS.parentOfTarget.tagName+"#"+THIS.parentOfTarget.id:doc; 
                     //_w("Event : "+(EVENTS[event] || EVENTS.DOM_MODIFY));
                     //_w("Element : "+e.target);
                     if(args.length == 3){
@@ -291,7 +486,8 @@ Ele.prototype.on = function(){
                         callback.apply({},[e, selector, parent_selector, args.slice(2)]); //, el
                     }
                 }
-                el(ele).eventListener((EVENTS[event] || EVENTS.DOM_MODIFY), Handler);
+                if(typeof EVENTS[event] !== "undefined") el(ele).eventListener((EVENTS[event]), Handler);
+                else _l(event+" is currently not supported");
             });
         }
     } catch(err){
@@ -302,7 +498,8 @@ Ele.prototype.on = function(){
 Ele.prototype.dynamic = function(){ //_l(this.selectors);
     var args = Helper.collection(arguments); // Array like object OR Collection
     var SELECTORS = window.elementSelectors;
-    var CURRENT_TARGET = this.get().tagName+"#"+this.get().id;
+    var target = this.get()
+    var CURRENT_TARGET = target.tagName+"#"+target.id;
     
 
     /* Make element event listener dynamic */
@@ -389,7 +586,7 @@ Ele.prototype.dynamic = function(){ //_l(this.selectors);
         //  THEN BROWSER WILL GET HANGED !! SO DO NOT USE THIS TYPE OF LOGIC.
         //-------------- TOO MUCH RECURSIONS -------------
         var THIS = this;
-        var PARENT = this.parent;
+        var PARENT = this.parentOfTarget;
         var ParentHandler = function(){
             var args = Helper.collection(arguments);
             var ev = args[0];
@@ -448,8 +645,16 @@ Ele.prototype.dynamic = function(){ //_l(this.selectors);
 }
 
 Ele.prototype.refreshListeners = function(){
-    _detachCurrentListeners(true);
-    _attachLastListeners(true);
+    var elArr = this.getAll(); 
+    elArr.forEach(function(ele, i){
+        _detachCurrentListeners(ele);
+        _attachLastListeners(ele);
+    });
+}
+
+Ele.prototype.refreshAllListeners = function(){
+    _detachCurrentListeners();
+    _attachLastListeners();
 }
 
 Ele.prototype.detachCurrentListeners = function(){
@@ -500,45 +705,91 @@ Ele.prototype.isElement = function(o){
 }
 
 /* Abstruction */
-function _detachCurrentListeners(tracking = false){ //_w("_detachListeners");
+function _filter(elArr, sel = false, callBack = false){
+    var result = [];
+    if(!callBack){
+        if(sel == false || sel == null || sel == "") throw new Error('Selector can not be blank at ele.filter() function.');
+        elArr.forEach(function(val, i){
+            if((val && val.matches(sel))) result.push(val);
+        });
+        //return (ele && ele.matches(sel))?true:false;
+    } else {
+        if(typeof callBack !== "function") throw new Error('callBack must be of type function at ele.filter() function.');
+        //return callBack(ele);
+        elArr.forEach(function(val, i){
+            if(callBack(val)) result.push(val);
+        });
+    }
+    return result;
+}
+
+function _nestedChild(el, sel){
+    var child, selector;
+    var nestedChild;
+    if(el.children.length > 0){
+        for (let i = 0; i < el.children.length; i++) {
+            //console.log(el.children[i].tagName);
+            child = el.children[i];
+            // if current child matches the expected
+            if (child && child.matches(sel)) {
+                if(child.id) selector = child.tagName+"#"+child.id;
+                else if(child.className) selector = child.tagName+"."+child.className.split(" ").join(".");
+                else selector = child.tagName;
+                return selector;
+            } else if((nestedChild = _nestedChild(child, sel)) != null){
+                return nestedChild;
+            }
+        }
+    } else return null;
+}
+
+//function _detachCurrentListeners(tracking = false, ele = false){ //_w("_detachListeners");
+function _detachCurrentListeners(ele = false){
 	for(var parent in window.elementSelectors){
 		if(window.elementSelectors.hasOwnProperty(parent)){
 			window.elementSelectors[parent].forEach(function(eleObj, i){
                 var selector = eleObj.sel;
                 selector = Helper.rtrim(selector,"#");
                 //_l("del listener from element : "+selector);
-				var events = window.EventObserve[selector];
-                var target = document.querySelector(selector);
-                //_l("target : ");
-                //_l(target);
-				if(target != null && typeof events !== "undefined"){
-                    events.forEach(function(obj, j){
-						(target.removeEventListener)?target.removeEventListener(obj.evt, obj.callBack, obj.capture) : target.detachEvent(obj.evt, obj.callBack, obj.capture);
-					});
-				} //_l(eleObj.dynamic); _l(window.elementSelectors[parent][i]);
-				if(!eleObj.dynamic && !tracking){	
-					delete window.EventObserve[selector];
-					window.elementSelectors[parent].remove(i); 
-				}
+                //if(!ele || ele == selector){
+                if(!ele || ele.matches(selector)){
+                    //if(ele && ele.matches(selector)) _l("del listener from element : "+selector);
+                    var events = window.EventObserve[selector];
+                    var target = document.querySelector(selector);
+                    //_l("target : ");
+                    //if(ele && ele.matches(selector)) _l(target);
+                    if(target != null && typeof events !== "undefined"){
+                        events.forEach(function(obj, j){
+                            (target.removeEventListener)?target.removeEventListener(obj.evt, obj.callBack, obj.capture) : target.detachEvent(obj.evt, obj.callBack, obj.capture);
+                        });
+                    } //_l(eleObj.dynamic); _l(window.elementSelectors[parent][i]);
+                    //if((!eleObj.dynamic && !tracking) || ele == selector){	
+                    if(!eleObj.dynamic){	
+                        delete window.EventObserve[selector];
+                        window.elementSelectors[parent].remove(i); 
+                    }
+                }
 			});
 		}
 	}
 }
 
-function _attachLastListeners(tracking = false){ //_w("_attachListeners"); 
+//function _attachLastListeners(tracking = false){ //_w("_attachListeners"); 
+function _attachLastListeners(ele = false){
     //_l(window.elementSelectors); _l(window.EventObserve);
 	for(var parent in window.elementSelectors){
 		if(window.elementSelectors.hasOwnProperty(parent)){
 			window.elementSelectors[parent].forEach(function(eleObj, i){
-                if((eleObj.dynamic && !tracking) || tracking){
-                    var selector = eleObj.sel;
-                    selector = Helper.rtrim(selector,"#");
+                var selector = eleObj.sel;
+                selector = Helper.rtrim(selector,"#");
+                //if((eleObj.dynamic && !tracking) || tracking){
+                if(eleObj.dynamic || (ele && ele.matches(selector))){
 					//_l(typeof selector);
-					//_l("add listener to element : "+selector);
+					//if(ele && ele.matches(selector)) _l("add listener to element : "+selector);
 					var events = window.EventObserve[selector];
 					var target = document.querySelector(selector);
 					//_l("target : ");
-                    //_l(target);
+                    //if(ele && ele.matches(selector)) _l(target);
 					if(target != null && typeof events !== "undefined"){
 						events.forEach(function(obj, j){
 							(target.addEventListener)?target.addEventListener(obj.evt, obj.callBack, obj.capture) : target.attachEvent(obj.evt, obj.callBack, obj.capture);
@@ -593,7 +844,7 @@ function _attachEvent(instance, target, event, callBackFunc, useCapture = false)
     //_l('element evt list : ------------------------');
     //_l(evt);
     //_l("event_exists : "+event_exists);
-
+    
     /* Event Listener will call for document element event (call more than one time) */
     if (target.hasAttribute) {  // && !event_exists
         if(instance.debug) _l("Adding event for : "+target.tagName+"#"+target.id+", "+event);
@@ -603,7 +854,10 @@ function _attachEvent(instance, target, event, callBackFunc, useCapture = false)
         if(instance.debug) _l("Target element : ");
         if(instance.debug) _l(target);
         //target.setAttribute('event', evt_str);
-        if(!found_listner) instance.observe[target.tagName+"#"+target.id].push({evt : event, callBack : callBackFunc, capture : useCapture}); // = instance.Listeners;
+        if(!found_listner) { 
+            instance.observe[target.tagName+"#"+target.id].push({evt : event, callBack : callBackFunc, capture : useCapture}); // = instance.Listeners;
+        }
+        
         //instance.Listeners = [];
         /*if(event_exists){
             if(instance.debug) _l("event listener removed for : "+event+" in "+target.tagName+"#"+target.id);
@@ -847,5 +1101,109 @@ function getFullName(item) {
 
 function myFunction() {
   document.getElementById("demo").innerHTML = persons.map(getFullName);
+}
+*/
+
+/*
+Find closest parent : 
+----------------------
+    function closest(el, selector) {
+    var matchesFn;
+
+    // find vendor prefix
+    ['matches','webkitMatchesSelector','mozMatchesSelector','msMatchesSelector','oMatchesSelector'].some(function(fn) {
+        if (typeof document.body[fn] == 'function') {
+            matchesFn = fn;
+            return true;
+        }
+        return false;
+    })
+
+    var parent;
+
+    // traverse parents
+    while (el) {
+        parent = el.parentElement;
+        if (parent && parent[matchesFn](selector)) {
+            return parent;
+        }
+        el = parent;
+    }
+
+    return null;
+}
+*/
+/*
+Get children of element :
+--------------------------
+https://developer.mozilla.org/en-US/docs/Web/API/ParentNode/children
+Has child logic
+https://stackoverflow.com/questions/2161634/how-to-check-if-element-has-any-children-in-javascript
+*/
+/*
+Find shiblings of element 
+---------------------------
+var result = [],
+    node = this.parentNode.firstChild;
+
+while ( node ) {
+    if ( node !== this && node.nodeType === Node.ELEMENT_NODE ) 
+      result.push( node );
+    node = node.nextElementSibling || node.nextSibling;
+}
+
+Other way 
+get all next siblings
+
+//this will start from the current element and get all of the next siblings
+
+function getNextSiblings(elem, filter) {
+    var sibs = [];
+    while (elem = elem.nextSibling) {
+        if (elem.nodeType === 3) continue; // text node
+        if (!filter || filter(elem)) sibs.push(elem);
+    }
+    return sibs;
+}
+
+get all previous siblings
+
+//this will start from the current element and get all the previous siblings
+
+function getPreviousSiblings(elem, filter) {
+    var sibs = [];
+    while (elem = elem.previousSibling) {
+        if (elem.nodeType === 3) continue; // text node
+        if (!filter || filter(elem)) sibs.push(elem);
+    }
+    return sibs;
+}
+
+get all siblings
+
+//this will start from the first child of the current element's parent and get all the siblings
+
+function getAllSiblings(elem, filter) {
+    var sibs = [];
+    elem = elem.parentNode.firstChild;
+    do {
+        if (elem.nodeType === 3) continue; // text node
+        if (!filter || filter(elem)) sibs.push(elem);
+    } while (elem = elem.nextSibling)
+    return sibs;
+}
+
+example filter to apply to above functions
+
+// Example filter only counts divs and spans but could be made more complex
+function exampleFilter(elem) {
+    switch (elem.nodeName.toUpperCase()) {
+        case 'DIV':
+            return true;
+        case 'SPAN':
+            return true;
+        default:
+            return false;
+    }
 }
 */

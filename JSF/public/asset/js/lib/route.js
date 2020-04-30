@@ -18,6 +18,7 @@ import {Module} from './module';
 import {Cookie} from './cookie';
 import {File} from './file';
 import {notFound} from '../modules/notFound/module'; 
+import {spinner} from '../modules/spinner/module';
 
 var listen = false;
 var instance = false;
@@ -189,7 +190,20 @@ export function Route(type = 'url', debug = false){
 		State.fileUnload();
 
 		/* loader in the app view */
-		State.appViewIsEmpty(false,`<div id="main"><div class="loader"></div></div>`);
+		var module = new Module();
+		module.load([spinner]);
+		var spinnerModule = module.get('spinner');
+		if(spinnerModule){
+			spinnerModule.spinnerControl.pageLoaderShow();
+		} else {
+			route.appViewIsEmpty(false,`
+				<div style="padding : 5px; margin : 5px;">
+					<div style="width : 100%; heigth : auto; border : 1px dotted black;">
+						<h1 style="font-family : sarif; font-weight : bold; font-size : 40px; text-align:center;">Loading ...</h1>
+					</div>
+				</div>	
+			`);
+		}
 
 		var args = Helper.collection(arguments);
 		var val = args[0];

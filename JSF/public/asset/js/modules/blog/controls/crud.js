@@ -345,7 +345,9 @@ export function CRUD(){
 							Must refresh event listner to set controls with 
 							modified elements in the document.
 						*/
-						SCOPE._el().refreshListeners();
+						// for multiple changes
+						//SCOPE._el().refreshAllListeners();
+						SCOPE._el(blockEle).find("FORM").refreshListeners();
 
 						// set data 
 						formEle.elements.namedItem("title").value = formSubmitData['title'];
@@ -396,7 +398,10 @@ export function CRUD(){
 								Must refresh event listner to set controls with 
 								modified elements in the document.
 							*/
-							SCOPE._el().refreshListeners();
+							// for multiple changes
+							//SCOPE._el().refreshAllListeners();
+							SCOPE._el(blockEle).find("FORM").refreshListeners();
+
 							// set data 
 							formEle.elements.namedItem("title").value = formSubmitData['title'];
 							formEle.elements.namedItem("category").value = formSubmitData['category'];
@@ -431,7 +436,10 @@ export function CRUD(){
 								Must refresh event listner to set controls with 
 								modified elements in the document.
 							*/
-							SCOPE._el().refreshListeners();
+							// for multiple changes
+							//SCOPE._el().refreshAllListeners();
+							SCOPE._el(blockEle).find("FORM").refreshListeners();
+
 							// set data 
 							formEle.elements.namedItem("title").value = formSubmitData['title'];
 							formEle.elements.namedItem("category").value = formSubmitData['category'];
