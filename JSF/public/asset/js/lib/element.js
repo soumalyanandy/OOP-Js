@@ -662,7 +662,7 @@ Ele.prototype.detachCurrentListeners = function(){
 }
 
 Ele.prototype.attachLastListeners = function(){
-    _attachLastListeners();
+    _attachLastListeners(); 
 }
 
 Ele.prototype.eventListener = function(event, callBackFunc, useCapture = false){

@@ -210,7 +210,7 @@ export function Route(type = 'url', debug = false){
 		// parse route for callback
 		var match = this.parse(val);
 		if(this.debug) _l("match : "+match);
-		/* If match found ! */
+		/* If match found ! */ 
 		if(match){
 			var state = this.currentState();
 			if(this.debug) _l(state);

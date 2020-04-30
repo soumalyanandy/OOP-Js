@@ -14,7 +14,7 @@ var spinnerControl = function(){
         var SCOPE = this;
 
         /* Empty main view */
-        State.appViewIsEmpty(true);
+        State.appViewIsEmpty(true); 
 
         /* create spinner block */
         var spinnerBlock = new SCOPE._Block('#spinner',['row']);
