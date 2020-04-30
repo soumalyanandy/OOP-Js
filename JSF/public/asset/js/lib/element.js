@@ -14,8 +14,9 @@ import {Module} from './module';
 
 /* Add/Update Window Object */
 window.Array = Prototype.Array;
-window.NodeList = Prototype.NodeList;
 window.Object = Prototype.Object;
+window.NodeList = Prototype.NodeList;
+window.Element = Prototype.Element;
 window.State = new Route('hash', false);
 window.elementSelectors = [];
 window.EventObserve = [];

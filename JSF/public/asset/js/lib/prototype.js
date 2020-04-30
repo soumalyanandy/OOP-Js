@@ -206,10 +206,31 @@ if(!Object.prototype.isEmpty) { // check previous existance
     };
 }*/
 
+/* 
+    @method : matches
+    @desc : checks to see if the Element would be selected by the provided selectorString
+    @suggestion : checks if the element "is" the selector
+*/
+if (!Element.prototype.matches) {
+    Element.prototype.matches = 
+        Element.prototype.matchesSelector || 
+        Element.prototype.mozMatchesSelector ||
+        Element.prototype.msMatchesSelector || 
+        Element.prototype.oMatchesSelector || 
+        Element.prototype.webkitMatchesSelector ||
+        function(s) {
+          var matches = (this.document || this.ownerDocument).querySelectorAll(s),
+              i = matches.length;
+          while (--i >= 0 && matches.item(i) !== this) {}
+          return i > -1;            
+        };
+}
+
 function Exporter(){
     this.Array = Array;
     this.Object = Object;
     this.NodeList = NodeList;
+    this.Element = Element;
 }
 
 export var Prototype = new Exporter();
