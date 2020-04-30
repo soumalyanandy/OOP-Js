@@ -376,7 +376,7 @@ export function CRUD(){
 							"form_alert_close",
 							"form_alert_close",
 							['close'],
-							[],
+							[], 
 							[
 								{key : 'type', val : "button"},
 								//{key : "data-dismiss", val : "alert"},
