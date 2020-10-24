@@ -1,5 +1,5 @@
 /* Javascript Framework */
-- : JSF :: version 1.0.0 (Alpha) : -
+- : JSF :: version 1.0.2 (Alpha) : -
 
 OR,
 
